@@ -16,9 +16,19 @@ const increaseQuestionAction = () => ({
   type: 'INCREASE_QUESTION',
 });
 
+const decreaseHeartAction = () => ({
+  type: 'INCREASE_HEART',
+});
+
+const increaseHeartAction = () => ({
+  type: 'INCREASE_HEART',
+});
+
 export {
   changeLevelAction,
   increaseLevelAction,
   changeQuestionAction,
   increaseQuestionAction,
+  decreaseHeartAction,
+  increaseHeartAction,
 };

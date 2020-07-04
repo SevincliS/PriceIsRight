@@ -17,35 +17,35 @@ import {
   increaseLevelAction,
   changeQuestionAction,
   increaseQuestionAction,
+  increaseHeartAction,
+  decreaseHeartAction,
 } from '../redux/actions/levelAction';
-import {HeaderBackButton} from '@react-navigation/stack';
 
 class Game extends React.Component {
   constructor(props) {
     super(props);
     const {level} = props;
     const {currentLevel: cl, currentQuestion: cq} = level;
-
-    console.log(levelInfo[cl][cq].url);
-    console.log(cl, cq);
+    const product = levelInfo[cl][cq];
+    console.log(product.url);
     this.state = {
       timer: this.UrgeWithPleasureComponent(),
       playing: true,
       heart: 5,
       score: 0,
+      givenAnswer: '',
     };
-  }
-  componentDidUpdate() {
-    console.log(this.props);
   }
 
   UrgeWithPleasureComponent = () =>
     React.cloneElement(
       <CountdownCircleTimer
-        onComplete={() => this.setState({playing: false})}
+        strokeWidth={3}
+        strokeLinecap="square"
+        onComplete={() => this.countDownFinished()}
         size={53}
         isPlaying
-        duration={2}
+        duration={20}
         colors={[['#004777', 0.33], ['#F7B801', 0.33], ['#A30000']]}>
         {({remainingTime, animatedColor}) => (
           <Animated.Text style={{color: animatedColor}}>
@@ -55,8 +55,12 @@ class Game extends React.Component {
       </CountdownCircleTimer>,
     );
 
-  displayHearts = () => {
-    const {heart} = this.state;
+  countDownFinished = () => {
+    this.setState({playing: false});
+    this.answerCallback(false);
+  };
+
+  displayHearts = heart => {
     const blackHeart = 5 - heart;
     let hearts = [];
     for (let i = 0; i < blackHeart; i++) {
@@ -70,10 +74,65 @@ class Game extends React.Component {
     [];
     return hearts;
   };
-  render() {
-    const {level, changeLevel, increaseQuestion, navigation} = this.props;
+
+  answer = givenAnswer => {
+    const {level} = this.props;
     const {currentLevel: cl, currentQuestion: cq} = level;
-    const {timer, score} = this.state;
+    const product = levelInfo[cl][cq];
+    this.setState({holdOnAnswer: givenAnswer}, () => {
+      setTimeout(() => {
+        this.setState({holdOnAnswer: ''});
+      }, 500);
+    });
+    this.setState({givenAnswer});
+    setTimeout(() => {
+      this.answerCallback(givenAnswer === product.rightAnswer);
+    }, 2000);
+  };
+
+  answerCallback = isTrue => {
+    const {decreaseHeart} = this.props;
+    isTrue ? null : decreaseHeart();
+    this.setState(prevState => ({
+      score: isTrue
+        ? prevState.score + 2
+        : prevState.score > 0
+        ? prevState.score - 1
+        : prevState.score,
+      heart: isTrue
+        ? prevState.heart
+        : prevState.heart > 0
+        ? prevState.heart - 1
+        : prevState.heart,
+    }));
+    const {increaseQuestion} = this.props;
+    this.setState({timer: null, givenAnswer: ''}, () => {
+      increaseQuestion();
+      this.setState({timer: this.UrgeWithPleasureComponent()});
+    });
+  };
+
+  getBackgroundColor = option => {
+    const {givenAnswer, holdOnAnswer} = this.state;
+    const {level} = this.props;
+    const {currentLevel: cl, currentQuestion: cq} = level;
+    const product = levelInfo[cl][cq];
+    if (option === holdOnAnswer) {
+      return '#40514E';
+    } else if (option === product.rightAnswer && option === givenAnswer) {
+      return '#10D454';
+    } else if (option !== product.rightAnswer && option === givenAnswer) {
+      return '#D40D20';
+    } else {
+      return '#30E3CA';
+    }
+  };
+
+  render() {
+    const {level, navigation} = this.props;
+    const {currentLevel: cl, currentQuestion: cq} = level;
+    const product = levelInfo[cl][cq];
+    const {timer, score, givenAnswer, heart} = this.state;
     return (
       <View style={styles.container}>
         <View style={styles.header}>
@@ -89,12 +148,12 @@ class Game extends React.Component {
           <Image
             style={styles.image}
             source={{
-              uri: levelInfo[cl][cq].url,
+              uri: product.url,
             }}
           />
         </View>
         <View style={styles.infoView}>
-          <View style={styles.heartsView}>{this.displayHearts()}</View>
+          <View style={styles.heartsView}>{this.displayHearts(heart)}</View>
           <View>
             <Text style={styles.scoreText}> Score: {score}</Text>
           </View>
@@ -105,46 +164,66 @@ class Game extends React.Component {
           </Text>
         </View>
         <View style={styles.firstAnswerRow}>
-          <TouchableOpacity>
-            <View style={styles.a}>
-              <Text>{levelInfo[cl][cq].a}</Text>
+          <TouchableOpacity
+            onPress={() => (givenAnswer === '' ? this.answer('a') : null)}>
+            <View
+              style={{
+                ...styles.a,
+                backgroundColor: this.getBackgroundColor('a'),
+              }}>
+              <Text style={styles.answerText}>{product.a}</Text>
             </View>
           </TouchableOpacity>
-          <TouchableOpacity>
-            <View style={styles.b}>
-              <Text>{levelInfo[cl][cq].b}</Text>
+          <TouchableOpacity
+            onPress={() => (givenAnswer === '' ? this.answer('b') : null)}>
+            <View
+              style={{
+                ...styles.a,
+                backgroundColor: this.getBackgroundColor('b'),
+              }}>
+              <Text style={styles.answerText}>{product.b}</Text>
             </View>
           </TouchableOpacity>
         </View>
         <View style={styles.secondAnswerRow}>
-          <TouchableOpacity>
-            <View style={styles.a}>
-              <Text>{levelInfo[cl][cq].c}</Text>
+          <TouchableOpacity
+            onPress={() => (givenAnswer === '' ? this.answer('c') : null)}>
+            <View
+              style={{
+                ...styles.a,
+                backgroundColor: this.getBackgroundColor('c'),
+              }}>
+              <Text style={styles.answerText}>{product.c}</Text>
             </View>
           </TouchableOpacity>
-          <TouchableOpacity>
-            <View style={styles.b}>
-              <Text>{levelInfo[cl][cq].d}</Text>
+          <TouchableOpacity
+            onPress={() => (givenAnswer === '' ? this.answer('d') : null)}>
+            <View
+              style={{
+                ...styles.a,
+                backgroundColor: this.getBackgroundColor('d'),
+              }}>
+              <Text style={styles.answerText}>{product.d}</Text>
             </View>
           </TouchableOpacity>
         </View>
         <View style={styles.jokerView}>
           <View style={styles.joker}>
-            <Text>50/50</Text>
+            <Text style={styles.jokerText}>50/50</Text>
             <Image style={styles.jokerImage} source={{uri: 'fifty'}} />
           </View>
           <View style={styles.separatorView}>
             <Image style={styles.separator} source={{uri: 'separator'}} />
           </View>
           <View style={styles.joker}>
-            <Text>2X</Text>
+            <Text style={styles.jokerText}>2X</Text>
             <Image style={styles.jokerImage} source={{uri: 'double_chance'}} />
           </View>
           <View style={styles.separatorView}>
             <Image style={styles.separator} source={{uri: 'separator'}} />
           </View>
           <View style={styles.joker}>
-            <Text>SKIP</Text>
+            <Text style={styles.jokerText}>SKIP</Text>
             <Image style={styles.jokerImage} source={{uri: 'skip_question'}} />
           </View>
         </View>
@@ -175,6 +254,9 @@ const styles = StyleSheet.create({
   },
   imageView: {
     height: 205,
+    width: 296,
+    marginLeft: 32,
+    borderRadius: 8,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
@@ -248,8 +330,11 @@ const styles = StyleSheet.create({
   jokerView: {
     flexDirection: 'row',
     marginTop: 17,
-    paddingTop: 5,
     backgroundColor: '#11999E',
+  },
+  answerText: {
+    color: '#fff',
+    fontSize: 16,
   },
   joker: {
     alignItems: 'center',
@@ -258,14 +343,20 @@ const styles = StyleSheet.create({
     height: 70,
   },
   jokerImage: {
-    width: 94,
-    marginTop: -8,
-    height: 65,
+    width: 64,
+    height: 25,
+    marginTop: -10,
+    marginBottom: 10,
     borderRadius: 5,
     resizeMode: 'contain',
   },
+  jokerText: {
+    color: '#FFF',
+    fontSize: 19,
+    marginBottom: 5,
+  },
   separatorView: {
-    marginTop: 15,
+    marginTop: 17,
     width: 1,
     height: 30,
   },
@@ -285,6 +376,8 @@ const mapDispatchToProps = dispatch => {
     increaseLevel: () => dispatch(increaseLevelAction()),
     changeQuestion: question => dispatch(changeQuestionAction(question)),
     increaseQuestion: () => dispatch(increaseQuestionAction()),
+    increaseHeart: () => dispatch(increaseHeartAction()),
+    decreaseHeart: () => dispatch(decreaseHeartAction()),
   };
 };
 
