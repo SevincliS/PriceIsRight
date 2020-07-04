@@ -37,8 +37,8 @@ class Game extends React.Component {
       givenAnswer: '',
       removedOptions: [],
       fiftyUsed: false,
+      double: false,
       doubleUsed: false,
-      double: 0,
       skipUsed: false,
     };
   }
@@ -82,7 +82,7 @@ class Game extends React.Component {
   };
 
   answer = (givenAnswer, stateAnswer) => {
-    const {removedOptions} = this.state;
+    const {removedOptions, double, doubleUsed} = this.state;
     if (stateAnswer !== '' || removedOptions.includes(givenAnswer)) {
       return;
     }
@@ -92,34 +92,58 @@ class Game extends React.Component {
     this.setState({holdOnAnswer: givenAnswer}, () => {
       setTimeout(() => {
         this.setState({holdOnAnswer: ''});
-      }, 500);
+      }, 1000);
     });
     this.setState({givenAnswer});
     setTimeout(() => {
       this.answerCallback(givenAnswer === product.rightAnswer);
-    }, 2000);
+    }, 2500);
   };
 
   answerCallback = isTrue => {
-    const {decreaseHeart} = this.props;
-    isTrue ? null : decreaseHeart();
-    this.setState(prevState => ({
-      score: isTrue
-        ? prevState.score + 2
-        : prevState.score > 0
-        ? prevState.score - 1
-        : prevState.score,
-      heart: isTrue
-        ? prevState.heart
-        : prevState.heart > 0
-        ? prevState.heart - 1
-        : prevState.heart,
-    }));
-    const {increaseQuestion} = this.props;
-    this.setState({timer: null, givenAnswer: '', removedOptions: []}, () => {
-      increaseQuestion();
-      this.setState({timer: this.UrgeWithPleasureComponent()});
-    });
+    const {decreaseHeart, increaseQuestion} = this.props;
+    const {double, givenAnswer} = this.state;
+
+    if (double) {
+      if (isTrue) {
+        increaseQuestion();
+        this.resetTimer();
+        this.setState({givenAnswer: '', removedOptions: [], doubleOption: ''});
+      } else {
+        this.resetTimer();
+      }
+      this.setState({doubleOption: givenAnswer, doubleUsed: true});
+    } else {
+      isTrue ? null : decreaseHeart();
+      this.setState(prevState => ({
+        score: isTrue
+          ? prevState.score + 2
+          : prevState.score > 0
+          ? prevState.score - 1
+          : prevState.score,
+        heart: isTrue
+          ? prevState.heart
+          : prevState.heart > 0
+          ? prevState.heart - 1
+          : prevState.heart,
+      }));
+      this.setState(
+        {timer: null, givenAnswer: '', removedOptions: [], doubleOption: ''},
+        () => {
+          increaseQuestion();
+          this.setState({timer: this.UrgeWithPleasureComponent()});
+        },
+      );
+    }
+  };
+
+  resetTimer = () => {
+    this.setState(
+      {timer: null, givenAnswer: '', removedOptions: [], double: false},
+      () => {
+        this.setState({timer: this.UrgeWithPleasureComponent()});
+      },
+    );
   };
 
   onPressFifty = () => {
@@ -127,12 +151,19 @@ class Game extends React.Component {
   };
 
   getOptionView = option => {
-    const {givenAnswer, holdOnAnswer, removedOptions} = this.state;
+    const {
+      givenAnswer,
+      doubleOption,
+      holdOnAnswer,
+      removedOptions,
+    } = this.state;
     const {level} = this.props;
     const {currentLevel: cl, currentQuestion: cq} = level;
     const product = levelInfo[cl][cq];
     if (option === holdOnAnswer) {
       return {backgroundColor: '#40514E'};
+    } else if (doubleOption === option) {
+      return {backgroundColor: '#40514E', opacity: 0.75};
     } else if (removedOptions.includes(option)) {
       return {opacity: 0.25};
     } else if (option === product.rightAnswer && option === givenAnswer) {
