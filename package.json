@@ -5,6 +5,8 @@
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
+    "android-debug": "android-debug.bat",
+    "android-release": "android-release.bat",
     "start": "react-native start",
     "test": "jest",
     "lint": "eslint ."
