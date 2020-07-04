@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import React from 'react';
 
 import {
@@ -34,6 +35,11 @@ class Game extends React.Component {
       heart: 5,
       score: 0,
       givenAnswer: '',
+      removedOptions: [],
+      fiftyUsed: false,
+      double: false,
+      doubleUsed: false,
+      skipUsed: false,
     };
   }
 
@@ -75,64 +81,113 @@ class Game extends React.Component {
     return hearts;
   };
 
-  answer = givenAnswer => {
+  answer = (givenAnswer, stateAnswer) => {
+    const {removedOptions, double, doubleUsed} = this.state;
+    if (stateAnswer !== '' || removedOptions.includes(givenAnswer)) {
+      return;
+    }
     const {level} = this.props;
     const {currentLevel: cl, currentQuestion: cq} = level;
     const product = levelInfo[cl][cq];
     this.setState({holdOnAnswer: givenAnswer}, () => {
       setTimeout(() => {
         this.setState({holdOnAnswer: ''});
-      }, 500);
+      }, 1000);
     });
     this.setState({givenAnswer});
     setTimeout(() => {
       this.answerCallback(givenAnswer === product.rightAnswer);
-    }, 2000);
+    }, 2500);
   };
 
   answerCallback = isTrue => {
-    const {decreaseHeart} = this.props;
-    isTrue ? null : decreaseHeart();
-    this.setState(prevState => ({
-      score: isTrue
-        ? prevState.score + 2
-        : prevState.score > 0
-        ? prevState.score - 1
-        : prevState.score,
-      heart: isTrue
-        ? prevState.heart
-        : prevState.heart > 0
-        ? prevState.heart - 1
-        : prevState.heart,
-    }));
-    const {increaseQuestion} = this.props;
-    this.setState({timer: null, givenAnswer: ''}, () => {
-      increaseQuestion();
-      this.setState({timer: this.UrgeWithPleasureComponent()});
-    });
+    const {decreaseHeart, increaseQuestion} = this.props;
+    const {double, givenAnswer} = this.state;
+
+    if (double) {
+      if (isTrue) {
+        increaseQuestion();
+        this.resetTimer();
+        this.setState({givenAnswer: '', removedOptions: [], doubleOption: ''});
+      } else {
+        this.resetTimer();
+      }
+      this.setState({doubleOption: givenAnswer, doubleUsed: true});
+    } else {
+      isTrue ? null : decreaseHeart();
+      this.setState(prevState => ({
+        score: isTrue
+          ? prevState.score + 2
+          : prevState.score > 0
+          ? prevState.score - 1
+          : prevState.score,
+        heart: isTrue
+          ? prevState.heart
+          : prevState.heart > 0
+          ? prevState.heart - 1
+          : prevState.heart,
+      }));
+      this.setState(
+        {timer: null, givenAnswer: '', removedOptions: [], doubleOption: ''},
+        () => {
+          increaseQuestion();
+          this.setState({timer: this.UrgeWithPleasureComponent()});
+        },
+      );
+    }
   };
 
-  getBackgroundColor = option => {
-    const {givenAnswer, holdOnAnswer} = this.state;
+  resetTimer = () => {
+    this.setState(
+      {timer: null, givenAnswer: '', removedOptions: [], double: false},
+      () => {
+        this.setState({timer: this.UrgeWithPleasureComponent()});
+      },
+    );
+  };
+
+  onPressFifty = () => {
+    this.setState({fifty: true});
+  };
+
+  getOptionView = option => {
+    const {
+      givenAnswer,
+      doubleOption,
+      holdOnAnswer,
+      removedOptions,
+    } = this.state;
     const {level} = this.props;
     const {currentLevel: cl, currentQuestion: cq} = level;
     const product = levelInfo[cl][cq];
     if (option === holdOnAnswer) {
-      return '#40514E';
+      return {backgroundColor: '#40514E'};
+    } else if (doubleOption === option) {
+      return {backgroundColor: '#40514E', opacity: 0.75};
+    } else if (removedOptions.includes(option)) {
+      return {opacity: 0.25};
     } else if (option === product.rightAnswer && option === givenAnswer) {
-      return '#10D454';
+      return {backgroundColor: '#10D454'};
     } else if (option !== product.rightAnswer && option === givenAnswer) {
-      return '#D40D20';
+      return {backgroundColor: '#D40D20'};
     } else {
-      return '#30E3CA';
+      return {backgroundColor: '#30E3CA'};
     }
   };
 
   render() {
-    const {level, navigation} = this.props;
+    const {level, navigation, increaseQuestion} = this.props;
     const {currentLevel: cl, currentQuestion: cq} = level;
     const product = levelInfo[cl][cq];
-    const {timer, score, givenAnswer, heart} = this.state;
+    const {
+      timer,
+      score,
+      givenAnswer,
+      heart,
+      fiftyUsed,
+      doubleUsed,
+      skipUsed,
+    } = this.state;
     return (
       <View style={styles.container}>
         <View style={styles.header}>
@@ -164,68 +219,99 @@ class Game extends React.Component {
           </Text>
         </View>
         <View style={styles.firstAnswerRow}>
-          <TouchableOpacity
-            onPress={() => (givenAnswer === '' ? this.answer('a') : null)}>
+          <TouchableOpacity onPress={() => this.answer('a', givenAnswer)}>
             <View
               style={{
                 ...styles.a,
-                backgroundColor: this.getBackgroundColor('a'),
+                ...this.getOptionView('a'),
               }}>
               <Text style={styles.answerText}>{product.a}</Text>
             </View>
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => (givenAnswer === '' ? this.answer('b') : null)}>
+          <TouchableOpacity onPress={() => this.answer('b', givenAnswer)}>
             <View
               style={{
                 ...styles.a,
-                backgroundColor: this.getBackgroundColor('b'),
+                ...this.getOptionView('b'),
               }}>
               <Text style={styles.answerText}>{product.b}</Text>
             </View>
           </TouchableOpacity>
         </View>
         <View style={styles.secondAnswerRow}>
-          <TouchableOpacity
-            onPress={() => (givenAnswer === '' ? this.answer('c') : null)}>
+          <TouchableOpacity onPress={() => this.answer('c', givenAnswer)}>
             <View
               style={{
                 ...styles.a,
-                backgroundColor: this.getBackgroundColor('c'),
+                ...this.getOptionView('c'),
               }}>
               <Text style={styles.answerText}>{product.c}</Text>
             </View>
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => (givenAnswer === '' ? this.answer('d') : null)}>
+          <TouchableOpacity onPress={() => this.answer('d', givenAnswer)}>
             <View
               style={{
                 ...styles.a,
-                backgroundColor: this.getBackgroundColor('d'),
+                ...this.getOptionView('d'),
               }}>
               <Text style={styles.answerText}>{product.d}</Text>
             </View>
           </TouchableOpacity>
         </View>
         <View style={styles.jokerView}>
-          <View style={styles.joker}>
-            <Text style={styles.jokerText}>50/50</Text>
-            <Image style={styles.jokerImage} source={{uri: 'fifty'}} />
-          </View>
+          <TouchableOpacity
+            onPress={() => {
+              let randVal = Math.floor(Math.random() * 3);
+              fiftyUsed
+                ? null
+                : this.setState({
+                    fiftyUsed: true,
+                    removedOptions: ['a', 'b', 'c', 'd']
+                      .filter(el => el !== product.rightAnswer)
+                      .filter((el, i) => {
+                        console.log(i);
+                        return i !== randVal;
+                      }),
+                  });
+            }}>
+            <View style={{...styles.joker, opacity: fiftyUsed ? 0.25 : 1}}>
+              <Text style={styles.jokerText}>50/50</Text>
+              <Image style={styles.jokerImage} source={{uri: 'fifty'}} />
+            </View>
+          </TouchableOpacity>
           <View style={styles.separatorView}>
             <Image style={styles.separator} source={{uri: 'separator'}} />
           </View>
-          <View style={styles.joker}>
-            <Text style={styles.jokerText}>2X</Text>
-            <Image style={styles.jokerImage} source={{uri: 'double_chance'}} />
-          </View>
+          <TouchableOpacity
+            onPress={() => {
+              doubleUsed
+                ? null
+                : this.setState({doubleUsed: true, double: true});
+            }}>
+            <View style={{...styles.joker, opacity: doubleUsed ? 0.25 : 1}}>
+              <Text style={styles.jokerText}>2X</Text>
+              <Image
+                style={styles.jokerImage}
+                source={{uri: 'double_chance'}}
+              />
+            </View>
+          </TouchableOpacity>
           <View style={styles.separatorView}>
             <Image style={styles.separator} source={{uri: 'separator'}} />
           </View>
-          <View style={styles.joker}>
-            <Text style={styles.jokerText}>SKIP</Text>
-            <Image style={styles.jokerImage} source={{uri: 'skip_question'}} />
-          </View>
+          <TouchableOpacity
+            onPress={() => {
+              skipUsed ? console.log('wtf') : increaseQuestion();
+              this.setState({skipUsed: true});
+            }}>
+            <View style={{...styles.joker, opacity: skipUsed ? 0.25 : 1}}>
+              <Text style={styles.jokerText}>SKIP</Text>
+              <Image
+                style={styles.jokerImage}
+                source={{uri: 'skip_question'}}
+              />
+            </View>
+          </TouchableOpacity>
         </View>
       </View>
     );
