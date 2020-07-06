@@ -16,12 +16,12 @@ const increaseQuestionAction = () => ({
   type: 'INCREASE_QUESTION',
 });
 
-const decreaseHeartAction = () => ({
-  type: 'INCREASE_HEART',
+const decreaseLifeAction = () => ({
+  type: 'INCREASE_LIFE',
 });
 
-const increaseHeartAction = () => ({
-  type: 'INCREASE_HEART',
+const increaseLifeAction = () => ({
+  type: 'INCREASE_LIFE',
 });
 
 export {
@@ -29,6 +29,6 @@ export {
   increaseLevelAction,
   changeQuestionAction,
   increaseQuestionAction,
-  decreaseHeartAction,
-  increaseHeartAction,
+  decreaseLifeAction,
+  increaseLifeAction,
 };

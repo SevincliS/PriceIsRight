@@ -1,10 +1,10 @@
+/* eslint-disable react-native/no-inline-styles */
 import React from 'react';
 
 import {
   View,
   TouchableOpacity,
   Text,
-  TextInput,
   Image,
   StyleSheet,
   Dimensions,
@@ -48,7 +48,7 @@ class Levels extends React.Component {
   ];
 
   levelCard = ({id, locked, successRate, difficulty}) => {
-    const {navigation, changeLevel, changeQuestion} = this.props;
+    const {navigation, changeLevel} = this.props;
     let uri;
     let borderColor;
 
@@ -103,14 +103,6 @@ class Levels extends React.Component {
   render() {
     return (
       <View style={styles.container}>
-        {/*<TouchableOpacity
-          onPress={() => {
-            changeLevel(0);
-            changeQuestion(0);
-            navigation.navigate('Game');
-          }}>
-          <Text>Go To first Question</Text>
-        </TouchableOpacity>*/}
         <View style={styles.header}>
           <TouchableOpacity>
             <View style={{flexDirection: 'row'}}>

@@ -8,38 +8,42 @@ import {
   Image,
   StyleSheet,
   Animated,
+  Dimensions,
 } from 'react-native';
 import {connect} from 'react-redux';
 import {CountdownCircleTimer} from 'react-native-countdown-circle-timer';
-import levelInfo from '../levelInfo';
+import levels from '../levels';
+import Modal from 'react-native-modal';
 
 import {
   changeLevelAction,
   increaseLevelAction,
   changeQuestionAction,
   increaseQuestionAction,
-  increaseHeartAction,
-  decreaseHeartAction,
+  increaseLifeAction,
+  decreaseLifeAction,
 } from '../redux/actions/levelAction';
+
+const width = parseInt(Dimensions.get('screen').width, 10) / 360;
+const height = parseInt(Dimensions.get('screen').height, 10) / 640;
 
 class Game extends React.Component {
   constructor(props) {
     super(props);
-    const {level} = props;
-    const {currentLevel: cl, currentQuestion: cq} = level;
-    const product = levelInfo[cl][cq];
-    console.log(product.url);
     this.state = {
       timer: this.UrgeWithPleasureComponent(),
       playing: true,
-      heart: 5,
-      score: 0,
+      life: 5,
+      score: 120,
       givenAnswer: '',
       removedOptions: [],
       fiftyUsed: false,
       double: false,
       doubleUsed: false,
       skipUsed: false,
+      starCount: 0,
+      showModal: false,
+      modalRightText: 'Tekrar',
     };
   }
 
@@ -52,7 +56,7 @@ class Game extends React.Component {
         size={53}
         isPlaying
         duration={20}
-        colors={[['#004777', 0.33], ['#F7B801', 0.33], ['#A30000']]}>
+        colors={[['#10D454', 0.33], ['#FF7B1B', 0.33], ['#D40D20']]}>
         {({remainingTime, animatedColor}) => (
           <Animated.Text style={{color: animatedColor}}>
             {remainingTime}
@@ -66,29 +70,33 @@ class Game extends React.Component {
     this.answerCallback(false);
   };
 
-  displayHearts = heart => {
-    const blackHeart = 5 - heart;
-    let hearts = [];
-    for (let i = 0; i < blackHeart; i++) {
-      hearts.push(
-        <Image style={styles.heartImage} source={{uri: 'black_heart'}} />,
+  componentWillUnmount() {
+    const {changeQuestion} = this.props;
+    changeQuestion(0);
+  }
+
+  displayLifes = life => {
+    const usedLife = 5 - life;
+    let lifes = [];
+    for (let i = 0; i < 5; i++) {
+      lifes.push(
+        <Image
+          style={styles.lifeImage}
+          source={{uri: i < usedLife ? 'black_heart' : 'heart'}}
+        />,
       );
     }
-    for (let i = 0; i < heart; i++) {
-      hearts.push(<Image style={styles.heartImage} source={{uri: 'heart'}} />);
-    }
-    [];
-    return hearts;
+    return lifes;
   };
 
   answer = (givenAnswer, stateAnswer) => {
-    const {removedOptions, double, doubleUsed} = this.state;
+    const {removedOptions} = this.state;
     if (stateAnswer !== '' || removedOptions.includes(givenAnswer)) {
       return;
     }
     const {level} = this.props;
     const {currentLevel: cl, currentQuestion: cq} = level;
-    const product = levelInfo[cl][cq];
+    const question = levels[cl][cq];
     this.setState({holdOnAnswer: givenAnswer}, () => {
       setTimeout(() => {
         this.setState({holdOnAnswer: ''});
@@ -96,58 +104,98 @@ class Game extends React.Component {
     });
     this.setState({givenAnswer});
     setTimeout(() => {
-      this.answerCallback(givenAnswer === product.rightAnswer);
+      this.answerCallback(givenAnswer === question.rightAnswer);
     }, 2500);
   };
 
   answerCallback = isTrue => {
-    const {decreaseHeart, increaseQuestion} = this.props;
+    const {decreaseLife} = this.props;
     const {double, givenAnswer} = this.state;
 
     if (double) {
-      if (isTrue) {
-        increaseQuestion();
-        this.resetTimer();
-        this.setState({givenAnswer: '', removedOptions: [], doubleOption: ''});
-      } else {
-        this.resetTimer();
-      }
-      this.setState({doubleOption: givenAnswer, doubleUsed: true});
+      this.useDouble(isTrue, givenAnswer);
     } else {
-      isTrue ? null : decreaseHeart();
-      this.setState(prevState => ({
-        score: isTrue
-          ? prevState.score + 2
-          : prevState.score > 0
-          ? prevState.score - 1
-          : prevState.score,
-        heart: isTrue
-          ? prevState.heart
-          : prevState.heart > 0
-          ? prevState.heart - 1
-          : prevState.heart,
-      }));
-      this.setState(
-        {timer: null, givenAnswer: '', removedOptions: [], doubleOption: ''},
-        () => {
-          increaseQuestion();
-          this.setState({timer: this.UrgeWithPleasureComponent()});
-        },
-      );
+      isTrue ? null : decreaseLife();
+      this.updateScoreAndLife(isTrue);
+      this.goToNextQuestion();
     }
   };
 
-  resetTimer = () => {
-    this.setState(
-      {timer: null, givenAnswer: '', removedOptions: [], double: false},
-      () => {
-        this.setState({timer: this.UrgeWithPleasureComponent()});
-      },
-    );
+  updateScoreAndLife = isTrue => {
+    this.setState(prevState => ({
+      score: isTrue ? prevState.score + 2 : prevState.score,
+      life: isTrue
+        ? prevState.life
+        : prevState.life > 0
+        ? prevState.life - 1
+        : prevState.life,
+    }));
   };
 
-  onPressFifty = () => {
-    this.setState({fifty: true});
+  useDouble = (isTrue, givenAnswer) => {
+    if (isTrue) {
+      this.goToNextQuestion();
+    } else {
+      this.setState({
+        doubleOption: givenAnswer,
+        doubleUsed: true,
+        givenAnswer: '',
+        double: false,
+      });
+    }
+  };
+
+  goToNextQuestion = () => {
+    const {increaseQuestion, level} = this.props;
+    if (level.currentQuestion === level.questionCount - 1) {
+      this.setState({showModal: true});
+    }
+    this.resetTimer(this.resetOptionViews, increaseQuestion);
+  };
+
+  resetTimer = (...functions) => {
+    this.setState({timer: null}, () => {
+      functions.forEach(f => f());
+      this.setState({timer: this.UrgeWithPleasureComponent()});
+    });
+  };
+
+  resetOptionViews = () => {
+    this.setState({givenAnswer: '', doubleOption: '', removedOptions: []});
+  };
+
+  onPressFifty = question => {
+    const {fiftyUsed} = this.state;
+    let randVal = Math.floor(Math.random() * 3);
+    fiftyUsed
+      ? null
+      : this.setState({
+          fiftyUsed: true,
+          //remove two random options that are not the right answer
+          removedOptions: ['a', 'b', 'c', 'd']
+            .filter(el => el !== question.rightAnswer)
+            .filter((_, i) => {
+              return i !== randVal;
+            }),
+        });
+  };
+
+  optionComponent = option => {
+    const {givenAnswer} = this.state;
+    const {level} = this.props;
+    const {currentLevel: cl, currentQuestion: cq} = level;
+    const question = levels[cl][cq];
+    return (
+      <TouchableOpacity onPress={() => this.answer(option, givenAnswer)}>
+        <View
+          style={{
+            ...styles.a,
+            ...this.getOptionView(option),
+          }}>
+          <Text style={styles.answerText}>{question[option]}</Text>
+        </View>
+      </TouchableOpacity>
+    );
   };
 
   getOptionView = option => {
@@ -159,16 +207,16 @@ class Game extends React.Component {
     } = this.state;
     const {level} = this.props;
     const {currentLevel: cl, currentQuestion: cq} = level;
-    const product = levelInfo[cl][cq];
+    const question = levels[cl][cq];
     if (option === holdOnAnswer) {
       return {backgroundColor: '#40514E'};
     } else if (doubleOption === option) {
-      return {backgroundColor: '#40514E', opacity: 0.75};
+      return {backgroundColor: '#40514E', opacity: 0.25};
     } else if (removedOptions.includes(option)) {
       return {opacity: 0.25};
-    } else if (option === product.rightAnswer && option === givenAnswer) {
+    } else if (option === question.rightAnswer && option === givenAnswer) {
       return {backgroundColor: '#10D454'};
-    } else if (option !== product.rightAnswer && option === givenAnswer) {
+    } else if (option !== question.rightAnswer && option === givenAnswer) {
       return {backgroundColor: '#D40D20'};
     } else {
       return {backgroundColor: '#30E3CA'};
@@ -176,20 +224,69 @@ class Game extends React.Component {
   };
 
   render() {
-    const {level, navigation, increaseQuestion} = this.props;
-    const {currentLevel: cl, currentQuestion: cq} = level;
-    const product = levelInfo[cl][cq];
     const {
       timer,
       score,
-      givenAnswer,
-      heart,
+      life,
       fiftyUsed,
       doubleUsed,
       skipUsed,
+      showModal,
+      starCount,
+      modalRightText,
     } = this.state;
+    const {level, navigation, increaseQuestion} = this.props;
+    const {currentLevel: cl, currentQuestion: cq} = level;
+    const question = levels[cl][cq];
     return (
       <View style={styles.container}>
+        <Modal style={styles.modal} isVisible={showModal}>
+          <View style={styles.modalView}>
+            <View style={styles.modalSuccessView}>
+              <Image
+                style={styles.modalSuccessImage}
+                source={{
+                  uri:
+                    starCount === 0
+                      ? 'no_star'
+                      : starCount === 1
+                      ? 'one_star'
+                      : starCount === 2
+                      ? 'two_star'
+                      : 'three_star',
+                }}
+              />
+            </View>
+            <View style={styles.modalScoreView}>
+              <Image style={styles.modalTrophyImage} source={{uri: 'trophy'}} />
+              <Text style={styles.modalScoreText}>{score}</Text>
+            </View>
+            <View style={styles.modalButtonsView}>
+              <TouchableOpacity
+                onPress={() => {
+                  this.setState({showModal: false});
+                  navigation.goBack();
+                }}>
+                <View style={styles.modalHomepage}>
+                  <Image
+                    style={styles.modalButtonLeftImage}
+                    source={{uri: 'arrow_left'}}
+                  />
+                  <Text style={styles.modalHomepageText}>Anasayfa</Text>
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity>
+                <View style={styles.modalHomepage}>
+                  <Text style={styles.modalRightText}>{modalRightText}</Text>
+                  <Image
+                    style={styles.modalButtonRightImage}
+                    source={{uri: 'arrow_right'}}
+                  />
+                </View>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
         <View style={styles.header}>
           <TouchableOpacity
             onPress={() => {
@@ -203,12 +300,12 @@ class Game extends React.Component {
           <Image
             style={styles.image}
             source={{
-              uri: product.url,
+              uri: question.url,
             }}
           />
         </View>
         <View style={styles.infoView}>
-          <View style={styles.heartsView}>{this.displayHearts(heart)}</View>
+          <View style={styles.lifeView}>{this.displayLifes(life)}</View>
           <View>
             <Text style={styles.scoreText}> Score: {score}</Text>
           </View>
@@ -219,60 +316,17 @@ class Game extends React.Component {
           </Text>
         </View>
         <View style={styles.firstAnswerRow}>
-          <TouchableOpacity onPress={() => this.answer('a', givenAnswer)}>
-            <View
-              style={{
-                ...styles.a,
-                ...this.getOptionView('a'),
-              }}>
-              <Text style={styles.answerText}>{product.a}</Text>
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => this.answer('b', givenAnswer)}>
-            <View
-              style={{
-                ...styles.a,
-                ...this.getOptionView('b'),
-              }}>
-              <Text style={styles.answerText}>{product.b}</Text>
-            </View>
-          </TouchableOpacity>
+          {this.optionComponent('a')}
+          {this.optionComponent('b')}
         </View>
         <View style={styles.secondAnswerRow}>
-          <TouchableOpacity onPress={() => this.answer('c', givenAnswer)}>
-            <View
-              style={{
-                ...styles.a,
-                ...this.getOptionView('c'),
-              }}>
-              <Text style={styles.answerText}>{product.c}</Text>
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => this.answer('d', givenAnswer)}>
-            <View
-              style={{
-                ...styles.a,
-                ...this.getOptionView('d'),
-              }}>
-              <Text style={styles.answerText}>{product.d}</Text>
-            </View>
-          </TouchableOpacity>
+          {this.optionComponent('c')}
+          {this.optionComponent('d')}
         </View>
         <View style={styles.jokerView}>
           <TouchableOpacity
             onPress={() => {
-              let randVal = Math.floor(Math.random() * 3);
-              fiftyUsed
-                ? null
-                : this.setState({
-                    fiftyUsed: true,
-                    removedOptions: ['a', 'b', 'c', 'd']
-                      .filter(el => el !== product.rightAnswer)
-                      .filter((el, i) => {
-                        console.log(i);
-                        return i !== randVal;
-                      }),
-                  });
+              this.onPressFifty(question);
             }}>
             <View style={{...styles.joker, opacity: fiftyUsed ? 0.25 : 1}}>
               <Text style={styles.jokerText}>50/50</Text>
@@ -301,7 +355,7 @@ class Game extends React.Component {
           </View>
           <TouchableOpacity
             onPress={() => {
-              skipUsed ? console.log('wtf') : increaseQuestion();
+              skipUsed ? null : increaseQuestion();
               this.setState({skipUsed: true});
             }}>
             <View style={{...styles.joker, opacity: skipUsed ? 0.25 : 1}}>
@@ -320,29 +374,30 @@ class Game extends React.Component {
 
 const styles = StyleSheet.create({
   container: {
+    justifyContent: 'center',
     backgroundColor: '#E4F9F5',
   },
   image: {
-    width: 100,
-    height: 190,
+    width: 100 * width,
+    height: 190 * height,
     resizeMode: 'contain',
   },
   backButton: {
-    width: 53,
-    height: 53,
+    width: 53 * width,
+    height: 53 * height,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginHorizontal: 32,
-    marginTop: 22,
-    marginBottom: 13,
+    marginHorizontal: 32 * width,
+    marginTop: 22 * height,
+    marginBottom: 13 * height,
   },
   imageView: {
-    height: 205,
-    width: 296,
-    marginLeft: 32,
-    borderRadius: 8,
+    height: 205 * height,
+    width: 296 * width,
+    marginLeft: 32 * width,
+    borderRadius: 8 * width,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
@@ -352,18 +407,17 @@ const styles = StyleSheet.create({
   infoView: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: 270,
-    height: 22,
-    marginLeft: 45,
-    marginRight: 45,
-    marginTop: 18,
+    width: 270 * width,
+    height: 22 * height,
+    marginHorizontal: 45 * width,
+    marginTop: 18 * height,
   },
-  heartImage: {
-    width: 21,
-    height: 19,
-    marginRight: 4,
+  lifeImage: {
+    width: 21 * width,
+    height: 19 * height,
+    marginRight: 4 * width,
   },
-  heartsView: {
+  lifeView: {
     flexDirection: 'row',
   },
   scoreText: {
@@ -374,11 +428,11 @@ const styles = StyleSheet.create({
   questionView: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: 296,
-    height: 44,
-    marginTop: 18,
-    marginLeft: 32,
-    borderRadius: 9,
+    width: 296 * width,
+    height: 44 * height,
+    marginTop: 18 * height,
+    marginLeft: 32 * width,
+    borderRadius: 9 * width,
     backgroundColor: '#30E3CA',
   },
   questionText: {
@@ -386,36 +440,36 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#fff',
   },
-  firstAnswerRow: {flexDirection: 'row', marginTop: 20},
+  firstAnswerRow: {flexDirection: 'row', marginTop: 20 * height},
   a: {
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#30E3CA',
     borderRadius: 9,
-    width: 130,
-    height: 45,
-    paddingHorizontal: 41,
-    paddingVertical: 13,
-    marginLeft: 32,
+    width: 130 * width,
+    height: 45 * height,
+    paddingHorizontal: 41 * width,
+    paddingVertical: 13 * height,
+    marginLeft: 32 * width,
   },
   b: {
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#30E3CA',
     borderRadius: 9,
-    width: 130,
-    height: 45,
-    paddingHorizontal: 41,
-    paddingVertical: 13,
-    marginLeft: 36,
+    width: 130 * width,
+    height: 45 * height,
+    paddingHorizontal: 41 * width,
+    paddingVertical: 13 * height,
+    marginLeft: 36 * width,
   },
   secondAnswerRow: {
     flexDirection: 'row',
-    marginTop: 20,
+    marginTop: 20 * height,
   },
   jokerView: {
     flexDirection: 'row',
-    marginTop: 17,
+    marginTop: 17 * height,
     backgroundColor: '#11999E',
   },
   answerText: {
@@ -425,33 +479,111 @@ const styles = StyleSheet.create({
   joker: {
     alignItems: 'center',
     justifyContent: 'space-around',
-    width: 119,
-    height: 70,
+    width: 119 * width,
+    height: 70 * height,
   },
   jokerImage: {
-    width: 64,
-    height: 25,
-    marginTop: -10,
-    marginBottom: 10,
-    borderRadius: 5,
+    width: 64 * width,
+    height: 25 * height,
+    marginTop: -10 * height,
+    marginBottom: 10 * height,
+    borderRadius: 5 * width,
     resizeMode: 'contain',
   },
   jokerText: {
     color: '#FFF',
     fontSize: 19,
-    marginBottom: 5,
+    marginBottom: 5 * height,
   },
   separatorView: {
-    marginTop: 17,
-    width: 1,
-    height: 30,
+    marginTop: 17 * height,
+    width: 1 * width,
+    height: 30 * height,
   },
   separator: {
-    width: 1,
-    height: 30,
+    width: 1 * width,
+    height: 30 * height,
     resizeMode: 'contain',
   },
+  modal: {
+    width: 325 * width,
+    height: 238 * height,
+    alignSelf: 'center',
+    alignItems: 'center',
+  },
+  modalView: {
+    width: 325 * width,
+    height: 238 * height,
+    borderRadius: 20,
+    backgroundColor: '#11999E',
+  },
+  modalSuccessView: {
+    width: 325 * width,
+    height: 57 * height,
+    marginTop: 19 * height,
+    alignSelf: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+  },
+  modalSuccessImage: {
+    width: 139 * width,
+    height: 57 * height,
+    alignSelf: 'center',
+  },
+  modalScoreView: {
+    width: 130 * width,
+    height: 46 * height,
+    marginTop: 32 * height,
+    alignSelf: 'center',
+    justifyContent: 'space-around',
+    flexDirection: 'row',
+  },
+  modalTrophyImage: {
+    width: 46 * width,
+    height: 46 * height,
+  },
+  modalScoreText: {
+    color: '#FFF',
+    fontFamily: 'Molle-Italic',
+    fontSize: 40,
+    alignSelf: 'center',
+    marginTop: 5 * height,
+    textAlign: 'right',
+  },
+  modalButtonsView: {
+    width: 325 * width,
+    height: 34 * height,
+    marginTop: 18 * height,
+    alignSelf: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+  },
+
+  modalHomepage: {
+    width: 134 * width,
+    height: 34 * height,
+    flexDirection: 'row',
+  },
+
+  modalButtonLeftImage: {width: 27 * width, height: 34 * height},
+  modalHomepageText: {
+    color: '#FFF',
+    fontSize: 27,
+    marginTop: 5 * height,
+    fontFamily: 'Molle-Italic',
+    marginLeft: 3 * width,
+  },
+  modalButtonRightImage: {width: 27 * width, height: 34 * height},
+  modalRightText: {
+    color: '#FFF',
+    fontSize: 27,
+    fontFamily: 'Molle-Italic',
+    marginTop: 5 * height,
+    marginLeft: 32 * width,
+    marginRight: 3 * width,
+  },
 });
+
 const mapStateToProps = state => {
   const {level} = state;
   return {level};
@@ -462,8 +594,8 @@ const mapDispatchToProps = dispatch => {
     increaseLevel: () => dispatch(increaseLevelAction()),
     changeQuestion: question => dispatch(changeQuestionAction(question)),
     increaseQuestion: () => dispatch(increaseQuestionAction()),
-    increaseHeart: () => dispatch(increaseHeartAction()),
-    decreaseHeart: () => dispatch(decreaseHeartAction()),
+    increaseHeart: () => dispatch(increaseLifeAction()),
+    decreaseLife: () => dispatch(decreaseLifeAction()),
   };
 };
 

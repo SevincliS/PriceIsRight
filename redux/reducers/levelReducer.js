@@ -2,9 +2,9 @@ const INITIAL_STATE = {
   currentLevel: 0,
   currentQuestion: 0,
   levelCount: 3,
-  questionCount: 15,
+  questionCount: 1,
   level: 15,
-  heart: 5,
+  life: 5,
 };
 
 const levelReducer = (state = INITIAL_STATE, action) => {
@@ -18,9 +18,9 @@ const levelReducer = (state = INITIAL_STATE, action) => {
     case 'INCREASE_QUESTION':
       return {...state, currentQuestion: state.currentQuestion + 1};
     case 'INCREASE_HEART':
-      return {...state, heart: state.heart < 5 ? state.heart + 1 : state.heart};
-    case 'DECREASE_HEART':
-      return {...state, heart: state.heart > 0 ? state.heart - 1 : state.heart};
+      return {...state, life: state.life < 5 ? state.life + 1 : state.life};
+    case 'DECREASE_LIFE':
+      return {...state, life: state.life > 0 ? state.life - 1 : state.life};
     default:
       return state;
   }
