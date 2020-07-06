@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "943798588117",
+    "firebase_url": "https://priceisright-d9d4e.firebaseio.com",
+    "project_id": "priceisright-d9d4e",
+    "storage_bucket": "priceisright-d9d4e.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:943798588117:android:5964c10a6a1b344b84c85c",
+        "android_client_info": {
+          "package_name": "com.priceisright"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "943798588117-56dl7175gpgp9dtop5qt9ho4na2dh47o.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCL6wGfcilK4hBEiPEBu_Dwg_w_L38WjWk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "943798588117-56dl7175gpgp9dtop5qt9ho4na2dh47o.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

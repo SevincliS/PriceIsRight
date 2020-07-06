@@ -23,6 +23,20 @@ import {
   increaseLifeAction,
   decreaseLifeAction,
 } from '../redux/actions/levelAction';
+import {
+  RewardedAd,
+  RewardedAdEventType,
+  TestIds,
+} from '@react-native-firebase/admob';
+
+const adUnitId = __DEV__
+  ? TestIds.REWARDED
+  : 'ca-app-pub-6543358689178377~9007598737';
+
+const rewarded = RewardedAd.createForAdRequest(adUnitId, {
+  requestNonPersonalizedAdsOnly: true,
+  keywords: ['game', 'playing'],
+});
 
 const width = parseInt(Dimensions.get('screen').width, 10) / 360;
 const height = parseInt(Dimensions.get('screen').height, 10) / 640;
@@ -33,7 +47,7 @@ class Game extends React.Component {
     this.state = {
       timer: this.UrgeWithPleasureComponent(),
       playing: true,
-      life: 5,
+      life: 1,
       score: 120,
       givenAnswer: '',
       removedOptions: [],
@@ -42,9 +56,35 @@ class Game extends React.Component {
       doubleUsed: false,
       skipUsed: false,
       starCount: 0,
-      showModal: false,
-      modalRightText: 'Tekrar',
+      showScoreModal: false,
+      scoreModalRightText: 'Tekrar',
+      showAdModal: false,
     };
+
+    rewarded.load();
+
+    this.eventListener = rewarded.onAdEvent((type, error, reward) => {
+      if (type === 'closed' && this.state.earned) {
+        const {increaseLife} = this.props;
+        increaseLife();
+        this.setState({
+          showScoreModal: false,
+        });
+        rewarded.load();
+      }
+      if (type === 'closed' && !this.state.earned) {
+        rewarded.load();
+        this.setState({
+          modalText: 'Yeterince izlemediğin için ödülü alamadınn!',
+        });
+      }
+      if (type === RewardedAdEventType.LOADED) {
+        this.setState({showRewarded: true});
+      }
+      if (type === RewardedAdEventType.EARNED_REWARD) {
+        this.setState({earned: true, showRewarded: false});
+      }
+    });
   }
 
   UrgeWithPleasureComponent = () =>
@@ -108,28 +148,42 @@ class Game extends React.Component {
     }, 2500);
   };
 
-  answerCallback = isTrue => {
+  answerCallback = async isTrue => {
     const {decreaseLife} = this.props;
     const {double, givenAnswer} = this.state;
 
     if (double) {
       this.useDouble(isTrue, givenAnswer);
     } else {
-      isTrue ? null : decreaseLife();
-      this.updateScoreAndLife(isTrue);
-      this.goToNextQuestion();
+      await this.updateScoreAndLife(isTrue);
+      const {life} = this.state;
+      console.log(life);
+      if (!isTrue && life === 0) {
+        this.setState({showAdModal: true});
+      } else if (!isTrue) {
+        this.setState({playing: false});
+        decreaseLife();
+        this.goToNextQuestion();
+      }
     }
   };
 
-  updateScoreAndLife = isTrue => {
-    this.setState(prevState => ({
-      score: isTrue ? prevState.score + 2 : prevState.score,
-      life: isTrue
-        ? prevState.life
-        : prevState.life > 0
-        ? prevState.life - 1
-        : prevState.life,
-    }));
+  updateScoreAndLife = async isTrue => {
+    return new Promise((res, rej) => {
+      this.setState(
+        prevState => ({
+          score: isTrue ? prevState.score + 2 : prevState.score,
+          life: isTrue
+            ? prevState.life
+            : prevState.life > 0
+            ? prevState.life - 1
+            : prevState.life,
+        }),
+        () => {
+          res();
+        },
+      );
+    });
   };
 
   useDouble = (isTrue, givenAnswer) => {
@@ -148,7 +202,7 @@ class Game extends React.Component {
   goToNextQuestion = () => {
     const {increaseQuestion, level} = this.props;
     if (level.currentQuestion === level.questionCount - 1) {
-      this.setState({showModal: true});
+      this.setState({showScoreModal: true});
     }
     this.resetTimer(this.resetOptionViews, increaseQuestion);
   };
@@ -231,20 +285,21 @@ class Game extends React.Component {
       fiftyUsed,
       doubleUsed,
       skipUsed,
-      showModal,
+      showScoreModal,
+      showAdModal,
       starCount,
-      modalRightText,
+      scoreModalRightText,
     } = this.state;
     const {level, navigation, increaseQuestion} = this.props;
     const {currentLevel: cl, currentQuestion: cq} = level;
     const question = levels[cl][cq];
     return (
       <View style={styles.container}>
-        <Modal style={styles.modal} isVisible={showModal}>
-          <View style={styles.modalView}>
-            <View style={styles.modalSuccessView}>
+        <Modal style={styles.scoreModal} isVisible={showScoreModal}>
+          <View style={styles.scoreModalView}>
+            <View style={styles.scoreModalSuccessView}>
               <Image
-                style={styles.modalSuccessImage}
+                style={styles.scoreModalSuccessImage}
                 source={{
                   uri:
                     starCount === 0
@@ -257,33 +312,58 @@ class Game extends React.Component {
                 }}
               />
             </View>
-            <View style={styles.modalScoreView}>
-              <Image style={styles.modalTrophyImage} source={{uri: 'trophy'}} />
-              <Text style={styles.modalScoreText}>{score}</Text>
+            <View style={styles.scoreModalScoreView}>
+              <Image
+                style={styles.scoreModalTrophyImage}
+                source={{uri: 'trophy'}}
+              />
+              <Text style={styles.scoreModalScoreText}>{score}</Text>
             </View>
-            <View style={styles.modalButtonsView}>
+            <View style={styles.scoreModalButtonsView}>
               <TouchableOpacity
                 onPress={() => {
-                  this.setState({showModal: false});
+                  this.setState({showScoreModal: false});
                   navigation.goBack();
                 }}>
-                <View style={styles.modalHomepage}>
+                <View style={styles.scoreModalHomepage}>
                   <Image
-                    style={styles.modalButtonLeftImage}
+                    style={styles.scoreModalButtonLeftImage}
                     source={{uri: 'arrow_left'}}
                   />
-                  <Text style={styles.modalHomepageText}>Anasayfa</Text>
+                  <Text style={styles.scoreModalHomepageText}>Anasayfa</Text>
                 </View>
               </TouchableOpacity>
               <TouchableOpacity>
-                <View style={styles.modalHomepage}>
-                  <Text style={styles.modalRightText}>{modalRightText}</Text>
+                <View style={styles.scoreModalHomepage}>
+                  <Text style={styles.scoreModalRightText}>
+                    {scoreModalRightText}
+                  </Text>
                   <Image
-                    style={styles.modalButtonRightImage}
+                    style={styles.scoreModalButtonRightImage}
                     source={{uri: 'arrow_right'}}
                   />
                 </View>
               </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+        <Modal style={styles.scoreModal} isVisible={showAdModal}>
+          <View style={styles.scoreModalView}>
+            <View style={styles.adModalImageView}>
+              <Image style={styles.adModalImage} source={{uri: 'watch_ad'}} />
+            </View>
+            <View style={styles.adModalContinueView}>
+              <Text style={styles.adModalContinueText}>
+                Kaldığın yerden devam et
+              </Text>
+            </View>
+            <View style={styles.adModalButtonsView}>
+              <View style={styles.adModalLeftButton}>
+                <Text style={styles.adModalLeftButtonText}>Anasayfa</Text>
+              </View>
+              <View style={styles.adModalRightButton}>
+                <Text style={styles.adModalRightButtonText}>Reklam İzle</Text>
+              </View>
             </View>
           </View>
         </Modal>
@@ -505,19 +585,19 @@ const styles = StyleSheet.create({
     height: 30 * height,
     resizeMode: 'contain',
   },
-  modal: {
+  scoreModal: {
     width: 325 * width,
     height: 238 * height,
     alignSelf: 'center',
     alignItems: 'center',
   },
-  modalView: {
+  scoreModalView: {
     width: 325 * width,
     height: 238 * height,
     borderRadius: 20,
     backgroundColor: '#11999E',
   },
-  modalSuccessView: {
+  scoreModalSuccessView: {
     width: 325 * width,
     height: 57 * height,
     marginTop: 19 * height,
@@ -525,12 +605,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flexDirection: 'row',
   },
-  modalSuccessImage: {
+  scoreModalSuccessImage: {
     width: 139 * width,
     height: 57 * height,
     alignSelf: 'center',
   },
-  modalScoreView: {
+  scoreModalScoreView: {
     width: 130 * width,
     height: 46 * height,
     marginTop: 32 * height,
@@ -538,11 +618,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     flexDirection: 'row',
   },
-  modalTrophyImage: {
+  scoreModalTrophyImage: {
     width: 46 * width,
     height: 46 * height,
   },
-  modalScoreText: {
+  scoreModalScoreText: {
     color: '#FFF',
     fontFamily: 'Molle-Italic',
     fontSize: 40,
@@ -550,7 +630,7 @@ const styles = StyleSheet.create({
     marginTop: 5 * height,
     textAlign: 'right',
   },
-  modalButtonsView: {
+  scoreModalButtonsView: {
     width: 325 * width,
     height: 34 * height,
     marginTop: 18 * height,
@@ -559,28 +639,77 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
 
-  modalHomepage: {
+  scoreModalHomepage: {
     width: 134 * width,
     height: 34 * height,
     flexDirection: 'row',
   },
 
-  modalButtonLeftImage: {width: 27 * width, height: 34 * height},
-  modalHomepageText: {
+  scoreModalButtonLeftImage: {width: 27 * width, height: 34 * height},
+  scoreModalHomepageText: {
     color: '#FFF',
     fontSize: 27,
     marginTop: 5 * height,
     fontFamily: 'Molle-Italic',
     marginLeft: 3 * width,
   },
-  modalButtonRightImage: {width: 27 * width, height: 34 * height},
-  modalRightText: {
+  scoreModalButtonRightImage: {width: 27 * width, height: 34 * height},
+  scoreModalRightText: {
     color: '#FFF',
     fontSize: 27,
     fontFamily: 'Molle-Italic',
     marginTop: 5 * height,
     marginLeft: 32 * width,
     marginRight: 3 * width,
+  },
+  adModalImageView: {
+    height: 94 * height,
+    marginTop: 13 * height,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  adModalImage: {
+    width: 94,
+    height: 94,
+  },
+  adModalContinueView: {
+    marginTop: 12 * height,
+    height: 23 * height,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  adModalContinueText: {fontSize: 20, fontFamily: 'roboto', color: '#FFB41A'},
+  adModalButtonsView: {
+    marginTop: 26 * height,
+    width: 259 * width,
+    marginLeft: 33 * width,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  adModalLeftButton: {
+    width: 110 * width,
+    height: 38 * height,
+    borderRadius: 9,
+    opacity: 0.75,
+    borderWidth: 1,
+    borderColor: '#FF841A',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  adModalLeftButtonText: {fontFamily: 'roboto', fontSize: 20, color: '#FBA129'},
+
+  adModalRightButton: {
+    width: 110 * width,
+    height: 38 * height,
+    borderRadius: 9,
+    backgroundColor: '#FFB41A',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  adModalRightButtonText: {
+    fontFamily: 'roboto',
+    fontSize: 20,
+    color: '#FFFFFF',
   },
 });
 
@@ -594,7 +723,7 @@ const mapDispatchToProps = dispatch => {
     increaseLevel: () => dispatch(increaseLevelAction()),
     changeQuestion: question => dispatch(changeQuestionAction(question)),
     increaseQuestion: () => dispatch(increaseQuestionAction()),
-    increaseHeart: () => dispatch(increaseLifeAction()),
+    increaseLife: () => dispatch(increaseLifeAction()),
     decreaseLife: () => dispatch(decreaseLifeAction()),
   };
 };

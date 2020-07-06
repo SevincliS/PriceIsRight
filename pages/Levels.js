@@ -82,7 +82,6 @@ class Levels extends React.Component {
   };
   render() {
     const {userLevels} = this.props;
-    console.log({userLevels});
     return (
       <View style={styles.container}>
         <View style={styles.header}>
