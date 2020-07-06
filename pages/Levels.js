@@ -147,6 +147,13 @@ const styles = StyleSheet.create({
     height: 37 * height,
     marginLeft: -65 * width,
     marginTop: 15 * height,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 10,
+    },
+    shadowOpacity: 0.53,
+    shadowRadius: 13.97,
   },
   lifeCountText: {
     marginLeft: 88 * width,
@@ -154,6 +161,15 @@ const styles = StyleSheet.create({
     zIndex: 1,
     fontSize: 16,
     fontFamily: 'Molle-Italic',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 10,
+    },
+    shadowOpacity: 0.53,
+    shadowRadius: 13.97,
+
+    elevation: 21,
   },
   header: {
     flexDirection: 'row',
@@ -172,6 +188,15 @@ const styles = StyleSheet.create({
     marginLeft: 55 * width,
     marginTop: 14 * height,
     borderRadius: 12 * height,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 10,
+    },
+    shadowOpacity: 0.53,
+    shadowRadius: 13.97,
+
+    elevation: 21,
   },
   scoreImage: {
     width: 25 * width,
@@ -209,6 +234,15 @@ const styles = StyleSheet.create({
     borderRadius: 12 * width,
     borderStyle: 'solid',
     borderColor: 'red',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 10,
+    },
+    shadowOpacity: 0.53,
+    shadowRadius: 13.97,
+
+    elevation: 21,
   },
   levelText: {
     alignSelf: 'center',
