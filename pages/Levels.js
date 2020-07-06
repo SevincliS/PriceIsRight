@@ -26,26 +26,6 @@ class Levels extends React.Component {
   constructor(props) {
     super(props);
   }
-  userLevel = [
-    {id: 1, locked: false, successRate: 1, difficulty: 1},
-    {id: 2, locked: false, successRate: 2, difficulty: 1},
-    {id: 3, locked: false, successRate: 3, difficulty: 2},
-    {id: 4, locked: false, successRate: 1, difficulty: 2},
-    {id: 5, locked: true, successRate: 1, difficulty: 3},
-    {id: 6, locked: true, successRate: 0, difficulty: 3},
-    {id: 7, locked: true, successRate: 0, difficulty: 3},
-    {id: 8, locked: true, successRate: 0, difficulty: 3},
-    {id: 9, locked: true, successRate: 0, difficulty: 3},
-    {id: 10, locked: false, successRate: 1, difficulty: 1},
-    {id: 11, locked: false, successRate: 2, difficulty: 1},
-    {id: 12, locked: false, successRate: 3, difficulty: 2},
-    {id: 13, locked: false, successRate: 1, difficulty: 2},
-    {id: 14, locked: true, successRate: 1, difficulty: 3},
-    {id: 15, locked: true, successRate: 0, difficulty: 3},
-    {id: 16, locked: true, successRate: 0, difficulty: 3},
-    {id: 17, locked: true, successRate: 0, difficulty: 3},
-    {id: 18, locked: true, successRate: 0, difficulty: 3},
-  ];
 
   levelCard = ({id, locked, successRate, difficulty}) => {
     const {navigation, changeLevel} = this.props;
@@ -101,6 +81,8 @@ class Levels extends React.Component {
     }
   };
   render() {
+    const {userLevels} = this.props;
+    console.log({userLevels});
     return (
       <View style={styles.container}>
         <View style={styles.header}>
@@ -120,16 +102,16 @@ class Levels extends React.Component {
         </View>
 
         <ScrollView style={styles.levelsContainer}>
-          {this.userLevel.map((level, index) => {
+          {userLevels.map((level, index) => {
             return index % 3 === 0 ? (
               <View style={styles.levelRow}>
                 {[
                   this.levelCard(level),
-                  this.userLevel[index + 1]
-                    ? this.levelCard(this.userLevel[index + 1])
+                  userLevels[index + 1]
+                    ? this.levelCard(userLevels[index + 1])
                     : null,
-                  this.userLevel[index + 2]
-                    ? this.levelCard(this.userLevel[index + 2])
+                  userLevels[index + 2]
+                    ? this.levelCard(userLevels[index + 2])
                     : null,
                 ]}
               </View>
@@ -273,8 +255,8 @@ const styles = StyleSheet.create({
 });
 
 const mapStateToProps = state => {
-  const {level} = state;
-  return {level};
+  const {level, userLevels} = state;
+  return {level, userLevels};
 };
 const mapDispatchToProps = dispatch => {
   return {

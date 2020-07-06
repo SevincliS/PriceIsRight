@@ -88,7 +88,7 @@ class Game extends React.Component {
     }
     return lifes;
   };
-
+  //TODO wrong answer callback'inde modal getirt.
   answer = (givenAnswer, stateAnswer) => {
     const {removedOptions} = this.state;
     if (stateAnswer !== '' || removedOptions.includes(givenAnswer)) {
