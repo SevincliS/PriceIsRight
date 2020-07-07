@@ -23,7 +23,8 @@ import {
 
 const width = parseInt(Dimensions.get('screen').width, 10) / 360;
 const height = parseInt(Dimensions.get('screen').height, 10) / 640;
-
+var Sound = require('react-native-sound');
+Sound.setCategory('Playback');
 class Levels extends React.Component {
   constructor(props) {
     super(props);
@@ -40,6 +41,30 @@ class Levels extends React.Component {
     this.spin = this.spinValue.interpolate({
       inputRange: [0, 1],
       outputRange: ['0deg', '360deg'],
+    });
+
+    var whoosh = new Sound('musicc.mp3', Sound.MAIN_BUNDLE, error => {
+      if (error) {
+        console.log('failed to load the sound', error);
+        return;
+      }
+
+      console.log(
+        'duration in seconds: ' +
+          whoosh.getDuration() +
+          'number of channels: ' +
+          whoosh.getNumberOfChannels(),
+      );
+      whoosh.play(success => {
+        if (success) {
+          console.log('successfully finished playing');
+        } else {
+          console.log('playback failed due to audio decoding errors');
+        }
+      });
+
+      whoosh.setVolume(0.5);
+      whoosh.setNumberOfLoops(-1);
     });
   }
 
