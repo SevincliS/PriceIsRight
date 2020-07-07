@@ -12,6 +12,7 @@ import {
   Animated,
   Easing,
   AppState,
+  Switch,
 } from 'react-native';
 import {connect} from 'react-redux';
 import Modal from 'react-native-modal';
@@ -33,7 +34,7 @@ Sound.setCategory('Playback');
 class Levels extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {showOptionModal: true};
+    this.state = {showOptionModal: false, soundOn: true};
 
     this.spinValue = new Animated.Value(0);
     Animated.loop(
@@ -138,42 +139,27 @@ class Levels extends React.Component {
   themes = ['yellow', 'black', 'red', 'green'];
   render() {
     const {userLevels} = this.props;
-    const {showOptionModal} = this.state;
+    const {showOptionModal, soundOn} = this.state;
     return (
       <View style={styles.container}>
-        <Modal isVisible={showOptionModal}>
+        <Modal
+          onBackdropPress={() => this.setState({showOptionModal: false})}
+          isVisible={showOptionModal}>
           <LinearGradient
             colors={['#C4FEF3', '#21A2A5']}
             style={styles.linearGradient}>
-            <Picker
-              mode="dropdown"
-              style={styles.picker}
-              itemStyle={styles.pickerItem}
-              onValueChange={value => {
-                this.setState({selectedTheme: value});
-              }}>
-              {this.themes.map(theme => (
-                <Picker.Item
-                  key={theme}
-                  label={theme}
-                  value={theme}
-                  color={theme}
-                />
-              ))}
-            </Picker>
-            <Slider
-              style={{
-                width: 332,
-                height: 8,
-                marginTop: 15,
-                transform: [{scale: 1}],
-              }}
-              thumbTintColor="#40514E"
-              minimumTrackTintColor="#40514E"
-              minimumValue={0}
-              maximumValue={1}
-              maximumTrackTintColor="#FFF"
-            />
+            <View style={styles.container}>
+              <Switch
+                trackColor={{false: '#767577', true: '#81b0ff'}}
+                thumbColor={soundOn ? '#f5dd4b' : '#f4f3f4'}
+                ios_backgroundColor="#3e3e3e"
+                onValueChange={value => {
+                  this.setState({soundOn: value});
+                  !value ? this.whoosh.stop() : this.whoosh.play();
+                }}
+                value={soundOn}
+              />
+            </View>
           </LinearGradient>
         </Modal>
         <View style={styles.header}>
@@ -191,15 +177,20 @@ class Levels extends React.Component {
             <Text style={styles.scoreText}>50000</Text>
           </View>
           <View>
-            <Animated.Image
-              style={{
-                width: 36 * width,
-                height: 36 * height,
-                marginTop: 15,
-                transform: [{rotate: this.spin}],
-              }}
-              source={{uri: 'options'}}
-            />
+            <TouchableOpacity
+              onPress={() => {
+                this.setState({showOptionModal: true});
+              }}>
+              <Animated.Image
+                style={{
+                  width: 36 * width,
+                  height: 36 * height,
+                  marginTop: 15,
+                  transform: [{rotate: this.spin}],
+                }}
+                source={{uri: 'options'}}
+              />
+            </TouchableOpacity>
           </View>
         </View>
 

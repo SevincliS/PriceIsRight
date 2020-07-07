@@ -706,7 +706,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     position: 'absolute',
     top: 16 * height,
-    left: 276 * width,
+    left: 268 * width,
   },
 });
 
