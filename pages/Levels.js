@@ -11,6 +11,7 @@ import {
   ScrollView,
   Animated,
   Easing,
+  AppState,
 } from 'react-native';
 import {connect} from 'react-redux';
 import Modal from 'react-native-modal';
@@ -32,7 +33,7 @@ Sound.setCategory('Playback');
 class Levels extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {showOptionModal: false};
+    this.state = {showOptionModal: true};
 
     this.spinValue = new Animated.Value(0);
     Animated.loop(
@@ -48,12 +49,12 @@ class Levels extends React.Component {
       outputRange: ['0deg', '360deg'],
     });
 
-    var whoosh = new Sound('musicc.mp3', Sound.MAIN_BUNDLE, error => {
+    this.whoosh = new Sound('musicc.mp3', Sound.MAIN_BUNDLE, error => {
       if (error) {
         console.log('failed to load the sound', error);
         return;
       }
-      whoosh.play(success => {
+      this.whoosh.play(success => {
         if (success) {
           console.log('successfully finished playing');
         } else {
@@ -61,10 +62,26 @@ class Levels extends React.Component {
         }
       });
 
-      whoosh.setVolume(0.5);
-      whoosh.setNumberOfLoops(-1);
+      this.whoosh.setVolume(0.5);
+      this.whoosh.setNumberOfLoops(-1);
     });
   }
+
+  componentDidMount() {
+    AppState.addEventListener('change', this._handleAppStateChange);
+  }
+  componentWillUnmount() {
+    AppState.removeEventListener('change', this._handleAppStateChange);
+  }
+
+  _handleAppStateChange = currentAppState => {
+    if (currentAppState === 'background') {
+      this.whoosh.stop();
+    }
+    if (currentAppState === 'active') {
+      this.whoosh.play();
+    }
+  };
 
   levelCard = ({id, locked, successRate, difficulty}) => {
     const {navigation, changeLevel} = this.props;
@@ -128,7 +145,6 @@ class Levels extends React.Component {
           <LinearGradient
             colors={['#C4FEF3', '#21A2A5']}
             style={styles.linearGradient}>
-            <Text style={styles.buttonText}>Sign in with Facebook</Text>
             <Picker
               mode="dropdown"
               style={styles.picker}
@@ -150,12 +166,13 @@ class Levels extends React.Component {
                 width: 332,
                 height: 8,
                 marginTop: 15,
+                transform: [{scale: 1}],
               }}
-              thumbTintColor="#40541E"
+              thumbTintColor="#40514E"
               minimumTrackTintColor="#40514E"
               minimumValue={0}
               maximumValue={1}
-              maximumTrackTintColor="#000000"
+              maximumTrackTintColor="#FFF"
             />
           </LinearGradient>
         </Modal>
@@ -332,9 +349,7 @@ const styles = StyleSheet.create({
     marginLeft: -3 * width,
     position: 'absolute',
   },
-  picker: {
-    backgroundColor: '#40514E',
-  },
+  picker: {fontFamily: 'Molle-Italic'},
   pickerItem: {
     fontFamily: 'Molle-Italic',
   },
