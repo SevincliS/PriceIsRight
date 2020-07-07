@@ -31,7 +31,7 @@ import {
 
 const adUnitId = __DEV__
   ? TestIds.REWARDED
-  : 'ca-app-pub-6543358689178377~9007598737';
+  : 'ca-app-pub-4313673729121143/1131611168';
 
 const rewarded = RewardedAd.createForAdRequest(adUnitId, {
   requestNonPersonalizedAdsOnly: true,
@@ -361,9 +361,11 @@ class Game extends React.Component {
               <View style={styles.adModalLeftButton}>
                 <Text style={styles.adModalLeftButtonText}>Anasayfa</Text>
               </View>
-              <View style={styles.adModalRightButton}>
-                <Text style={styles.adModalRightButtonText}>Reklam İzle</Text>
-              </View>
+              <TouchableOpacity onPress={() => rewarded.show()}>
+                <View style={styles.adModalRightButton}>
+                  <Text style={styles.adModalRightButtonText}>Reklam İzle</Text>
+                </View>
+              </TouchableOpacity>
             </View>
           </View>
         </Modal>
