@@ -13,6 +13,10 @@ import {
   Easing,
 } from 'react-native';
 import {connect} from 'react-redux';
+import Modal from 'react-native-modal';
+import {Picker} from '@react-native-community/picker';
+import Slider from '@react-native-community/slider';
+import LinearGradient from 'react-native-linear-gradient';
 
 import {
   changeLevelAction,
@@ -28,6 +32,7 @@ Sound.setCategory('Playback');
 class Levels extends React.Component {
   constructor(props) {
     super(props);
+    this.state = {showOptionModal: false};
 
     this.spinValue = new Animated.Value(0);
     Animated.loop(
@@ -48,13 +53,6 @@ class Levels extends React.Component {
         console.log('failed to load the sound', error);
         return;
       }
-
-      console.log(
-        'duration in seconds: ' +
-          whoosh.getDuration() +
-          'number of channels: ' +
-          whoosh.getNumberOfChannels(),
-      );
       whoosh.play(success => {
         if (success) {
           console.log('successfully finished playing');
@@ -119,11 +117,48 @@ class Levels extends React.Component {
       );
     }
   };
+
+  themes = ['yellow', 'black', 'red', 'green'];
   render() {
     const {userLevels} = this.props;
-
+    const {showOptionModal} = this.state;
     return (
       <View style={styles.container}>
+        <Modal isVisible={showOptionModal}>
+          <LinearGradient
+            colors={['#C4FEF3', '#21A2A5']}
+            style={styles.linearGradient}>
+            <Text style={styles.buttonText}>Sign in with Facebook</Text>
+            <Picker
+              mode="dropdown"
+              style={styles.picker}
+              itemStyle={styles.pickerItem}
+              onValueChange={value => {
+                this.setState({selectedTheme: value});
+              }}>
+              {this.themes.map(theme => (
+                <Picker.Item
+                  key={theme}
+                  label={theme}
+                  value={theme}
+                  color={theme}
+                />
+              ))}
+            </Picker>
+            <Slider
+              style={{
+                width: 332,
+                height: 8,
+                marginTop: 15,
+              }}
+              thumbTintColor="#40541E"
+              minimumTrackTintColor="#40514E"
+              minimumValue={0}
+              maximumValue={1}
+              maximumTrackTintColor="#000000"
+            />
+          </LinearGradient>
+        </Modal>
         <View style={styles.header}>
           <TouchableOpacity>
             <View style={{flexDirection: 'row'}}>
@@ -296,6 +331,17 @@ const styles = StyleSheet.create({
     marginTop: -15 * height,
     marginLeft: -3 * width,
     position: 'absolute',
+  },
+  picker: {
+    backgroundColor: '#40514E',
+  },
+  pickerItem: {
+    fontFamily: 'Molle-Italic',
+  },
+  linearGradient: {
+    width: 325 * width,
+    height: 282 * height,
+    borderRadius: 18,
   },
 });
 

@@ -164,6 +164,8 @@ class Game extends React.Component {
         this.setState({playing: false});
         decreaseLife();
         this.goToNextQuestion();
+      } else {
+        this.goToNextQuestion();
       }
     }
   };
