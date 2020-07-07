@@ -9,6 +9,8 @@ import {
   StyleSheet,
   Dimensions,
   ScrollView,
+  Animated,
+  Easing,
 } from 'react-native';
 import {connect} from 'react-redux';
 
@@ -25,6 +27,20 @@ const height = parseInt(Dimensions.get('screen').height, 10) / 640;
 class Levels extends React.Component {
   constructor(props) {
     super(props);
+
+    this.spinValue = new Animated.Value(0);
+    Animated.loop(
+      Animated.timing(this.spinValue, {
+        toValue: 1,
+        duration: 3000,
+        easing: Easing.linear,
+        useNativeDriver: true, // To make use of native driver for performance
+      }),
+    ).start();
+    this.spin = this.spinValue.interpolate({
+      inputRange: [0, 1],
+      outputRange: ['0deg', '360deg'],
+    });
   }
 
   levelCard = ({id, locked, successRate, difficulty}) => {
@@ -80,6 +96,7 @@ class Levels extends React.Component {
   };
   render() {
     const {userLevels} = this.props;
+
     return (
       <View style={styles.container}>
         <View style={styles.header}>
@@ -95,6 +112,17 @@ class Levels extends React.Component {
           <View style={styles.score}>
             <Image style={styles.scoreImage} source={{uri: 'trophy'}} />
             <Text style={styles.scoreText}>50000</Text>
+          </View>
+          <View>
+            <Animated.Image
+              style={{
+                width: 36 * width,
+                height: 36 * height,
+                marginTop: 15,
+                transform: [{rotate: this.spin}],
+              }}
+              source={{uri: 'options'}}
+            />
           </View>
         </View>
 
@@ -147,11 +175,11 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.53,
     shadowRadius: 13.97,
-
     elevation: 21,
   },
   header: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     width: 360 * width,
     height: 65 * height,
     backgroundColor: '#C4FEF3',
@@ -164,7 +192,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#E4F9F5',
     width: 118 * width,
     height: 36 * height,
-    marginLeft: 55 * width,
     marginTop: 14 * height,
     borderRadius: 12 * height,
     shadowColor: '#000',
