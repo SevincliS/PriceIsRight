@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Animated,
   Dimensions,
+  ImageBackground,
 } from 'react-native';
 import {connect} from 'react-redux';
 import {CountdownCircleTimer} from 'react-native-countdown-circle-timer';
@@ -349,27 +350,24 @@ class Game extends React.Component {
             </View>
           </View>
         </Modal>
-        <Modal style={styles.scoreModal} isVisible={showAdModal}>
-          <View style={styles.scoreModalView}>
-            <View style={styles.adModalImageView}>
-              <Image style={styles.adModalImage} source={{uri: 'watch_ad'}} />
-            </View>
-            <View style={styles.adModalContinueView}>
-              <Text style={styles.adModalContinueText}>
-                Kaldığın yerden devam et
-              </Text>
-            </View>
-            <View style={styles.adModalButtonsView}>
-              <View style={styles.adModalLeftButton}>
-                <Text style={styles.adModalLeftButtonText}>Anasayfa</Text>
-              </View>
-              <TouchableOpacity onPress={() => rewarded.show()}>
-                <View style={styles.adModalRightButton}>
-                  <Text style={styles.adModalRightButtonText}>Reklam İzle</Text>
-                </View>
-              </TouchableOpacity>
-            </View>
-          </View>
+        <Modal style={styles.adModal} isVisible={showAdModal}>
+          <ImageBackground
+            resizeMode="contain"
+            style={styles.adModalImage}
+            source={{uri: 'watch_ad'}}>
+            <TouchableOpacity
+              style={styles.adModalLeftButton}
+              onPress={() => navigation.goBack()}
+            />
+            <TouchableOpacity
+              style={styles.adModalRightButton}
+              onPress={() => rewarded.show()}
+            />
+            <TouchableOpacity
+              style={styles.adModalCloseButton}
+              onPress={() => navigation.goBack()}
+            />
+          </ImageBackground>
         </Modal>
         <View style={styles.header}>
           <TouchableOpacity
@@ -589,6 +587,11 @@ const styles = StyleSheet.create({
     height: 30 * height,
     resizeMode: 'contain',
   },
+  adModal: {
+    width: 324 * width,
+    height: 286 * height,
+    flex: 1,
+  },
   scoreModal: {
     width: 325 * width,
     height: 238 * height,
@@ -666,15 +669,9 @@ const styles = StyleSheet.create({
     marginLeft: 32 * width,
     marginRight: 3 * width,
   },
-  adModalImageView: {
-    height: 94 * height,
-    marginTop: 13 * height,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   adModalImage: {
-    width: 94,
-    height: 94,
+    width: 324,
+    height: 286,
   },
   adModalContinueView: {
     marginTop: 12 * height,
@@ -683,37 +680,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   adModalContinueText: {fontSize: 20, fontFamily: 'roboto', color: '#FFB41A'},
-  adModalButtonsView: {
-    marginTop: 26 * height,
-    width: 259 * width,
-    marginLeft: 33 * width,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
   adModalLeftButton: {
-    width: 110 * width,
-    height: 38 * height,
-    borderRadius: 9,
-    opacity: 0.75,
+    width: 277 * width,
+    height: 59 * height,
+    borderRadius: 5,
     borderWidth: 1,
-    borderColor: '#FF841A',
-    justifyContent: 'center',
-    alignItems: 'center',
+    position: 'absolute',
+    top: 130 * height,
+    left: 24 * width,
   },
-  adModalLeftButtonText: {fontFamily: 'roboto', fontSize: 20, color: '#FBA129'},
 
   adModalRightButton: {
-    width: 110 * width,
-    height: 38 * height,
-    borderRadius: 9,
-    backgroundColor: '#FFB41A',
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: 277 * width,
+    height: 59 * height,
+    borderRadius: 5,
+    borderWidth: 1,
+    position: 'absolute',
+    top: 203 * height,
+    left: 24 * width,
   },
-  adModalRightButtonText: {
-    fontFamily: 'roboto',
-    fontSize: 20,
-    color: '#FFFFFF',
+  adModalCloseButton: {
+    width: 32 * width,
+    height: 32 * height,
+    borderRadius: 4,
+    borderWidth: 1,
+    position: 'absolute',
+    top: 16 * height,
+    left: 276 * width,
   },
 });
 
