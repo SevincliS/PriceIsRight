@@ -273,7 +273,7 @@ class Game extends React.Component {
     } else if (option !== question.rightAnswer && option === givenAnswer) {
       return {backgroundColor: '#D40D20'};
     } else {
-      return {backgroundColor: '#30E3CA'};
+      return {backgroundColor: '#35B0AB'};
     }
   };
 
@@ -513,7 +513,7 @@ const styles = StyleSheet.create({
     marginTop: 18 * height,
     marginLeft: 32 * width,
     borderRadius: 9 * width,
-    backgroundColor: '#30E3CA',
+    backgroundColor: '#35B0AB',
   },
   questionText: {
     fontFamily: 'roboto',
@@ -524,7 +524,7 @@ const styles = StyleSheet.create({
   a: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#30E3CA',
+    backgroundColor: '#35B0AB',
     borderRadius: 9,
     width: 130 * width,
     height: 45 * height,
@@ -535,7 +535,7 @@ const styles = StyleSheet.create({
   b: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#30E3CA',
+    backgroundColor: '#35B0AB',
     borderRadius: 9,
     width: 130 * width,
     height: 45 * height,

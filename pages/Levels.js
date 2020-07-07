@@ -72,9 +72,7 @@ class Levels extends React.Component {
             ) : (
               <Image style={styles.successImage} source={{uri}} />
             )}
-            <Text style={locked ? styles.lockedLevelText : styles.levelText}>
-              {id}
-            </Text>
+            <Text style={styles.levelText}>{id}</Text>
           </View>
         </TouchableOpacity>
       );
@@ -196,18 +194,19 @@ const styles = StyleSheet.create({
   },
   levelsContainer: {
     backgroundColor: '#E4F9F5',
-    width: 360 * width,
-    height: 640 * height,
   },
   levelRow: {
     justifyContent: 'space-around',
     flexDirection: 'row',
+    alignItems: 'center',
     width: 360 * width,
-    height: 103 * height,
+    height: 64 * height,
     backgroundColor: '#E4F9F5',
-    marginTop: 32 * height,
+    marginVertical: 32 * height,
   },
   levelCardView: {
+    flexDirection: 'row',
+    justifyContent: 'center',
     width: 64 * width,
     height: 64 * width,
     backgroundColor: '#40514E',
@@ -222,34 +221,29 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.53,
     shadowRadius: 13.97,
-
     elevation: 21,
   },
   levelText: {
+    textAlign: 'center',
     alignSelf: 'center',
     fontSize: 25,
     fontFamily: 'Molle-Italic',
     color: 'white',
-  },
-  lockedLevelText: {
-    alignSelf: 'center',
-    fontSize: 25,
-    fontFamily: 'Molle-Italic',
-    color: 'white',
-    marginTop: 10 * height,
+    width: 40 * width,
   },
   lockedImage: {
     width: 18 * width,
     height: 24 * height,
-    marginLeft: 50 * width,
-    marginTop: -10 * height,
     position: 'absolute',
+    start: 48,
+    top: -12,
   },
   successImage: {
     width: 65 * width,
-    height: 23 * height,
+    height: 26 * height,
     marginTop: -15 * height,
     marginLeft: -3 * width,
+    position: 'absolute',
   },
 });
 
