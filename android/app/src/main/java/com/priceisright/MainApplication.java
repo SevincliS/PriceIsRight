@@ -46,7 +46,7 @@ public class MainApplication extends MultiDexApplication implements ReactApplica
   public void onCreate() {
     super.onCreate();
     SoLoader.init(this, /* native exopackage */ false);
-    MobileAds.initialize(this, "ca-app-pub-6543358689178377~9007598737");
+    MobileAds.initialize(this, "ca-app-pub-4313673729121143~1323182852");
     initializeFlipper(this, getReactNativeHost().getReactInstanceManager());
   }
 
