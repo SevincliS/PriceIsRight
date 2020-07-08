@@ -145,19 +145,37 @@ class Levels extends React.Component {
           onBackdropPress={() => this.setState({showOptionModal: false})}
           isVisible={showOptionModal}>
           <LinearGradient
-            colors={['#C4FEF3', '#21A2A5']}
+            colors={['#26A5A7', '#26A5A7']}
             style={styles.linearGradient}>
-            <View style={styles.container}>
-              <Switch
-                trackColor={{false: '#767577', true: '#81b0ff'}}
-                thumbColor={soundOn ? '#f5dd4b' : '#f4f3f4'}
-                ios_backgroundColor="#3e3e3e"
-                onValueChange={value => {
-                  this.setState({soundOn: value});
-                  !value ? this.music.stop() : this.music.play();
-                }}
-                value={soundOn}
-              />
+            <View style={styles.optionModalSoundView}>
+              <View style={styles.optionModalSoundTexts}>
+                <Text>Müzik</Text>
+                <Text>Ses Efekti</Text>
+              </View>
+              <View style={styles.optionModalSwitches}>
+                <Switch
+                  style={{width: 41 * width, height: 20 * height}}
+                  trackColor={{false: '#767577', true: '#81b0ff'}}
+                  thumbColor={soundOn ? '#f5dd4b' : '#f4f3f4'}
+                  ios_backgroundColor="#3e3e3e"
+                  onValueChange={value => {
+                    this.setState({soundOn: value});
+                    !value ? this.music.stop() : this.music.play();
+                  }}
+                  value={soundOn}
+                />
+                <Switch
+                  style={{width: 41 * width, height: 20 * height}}
+                  trackColor={{false: '#767577', true: '#81b0ff'}}
+                  thumbColor={soundOn ? '#f5dd4b' : '#f4f3f4'}
+                  ios_backgroundColor="#3e3e3e"
+                  onValueChange={value => {
+                    this.setState({soundOn: value});
+                    !value ? this.music.stop() : this.music.play();
+                  }}
+                  value={soundOn}
+                />
+              </View>
             </View>
           </LinearGradient>
         </Modal>
@@ -261,10 +279,6 @@ const styles = StyleSheet.create({
 
     elevation: 24,
   },
-  container: {
-    backgroundColor: '#E4F9F5',
-    flex: 1,
-  },
   score: {
     flexDirection: 'row',
     backgroundColor: '#E4F9F5',
@@ -343,6 +357,7 @@ const styles = StyleSheet.create({
     start: 48,
     top: -12,
   },
+  //TODO düzelt
   successImage: {
     width: 65 * width,
     height: 26 * height,
@@ -356,8 +371,32 @@ const styles = StyleSheet.create({
   },
   linearGradient: {
     width: 325 * width,
-    height: 282 * height,
+    height: 403 * height,
     borderRadius: 18,
+    flexDirection: 'row',
+  },
+  optionModalSoundView: {
+    width: 286 * width,
+    height: 92 * height,
+    flexDirection: 'row',
+    marginLeft: 23 * width,
+    backgroundColor: '#477A70',
+    justifyContent: 'space-between',
+    borderRadius: 12 * height,
+  },
+  optionModalSoundTexts: {
+    width: 112 * width,
+    height: 61 * height,
+    marginTop: 17,
+    marginLeft: 34 * width,
+    justifyContent: 'space-between',
+  },
+  optionModalSwitches: {
+    width: 92 * width,
+    height: 92 * height,
+    justifyContent: 'space-around',
+    backgroundColor: '#A5EDDF',
+    borderRadius: 12,
   },
 });
 
