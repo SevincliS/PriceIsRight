@@ -42,11 +42,20 @@ const rewarded = RewardedAd.createForAdRequest(adUnitId, {
 const width = parseInt(Dimensions.get('screen').width, 10) / 360;
 const height = parseInt(Dimensions.get('screen').height, 10) / 640;
 
+var Sound = require('react-native-sound');
+Sound.setCategory('Playback');
+var Sound1 = require('react-native-sound');
+Sound1.setCategory('Playback');
+var Sound2 = require('react-native-sound');
+Sound2.setCategory('Playback');
+var Sound3 = require('react-native-sound');
+Sound3.setCategory('Playback');
+
 class Game extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      timer: this.UrgeWithPleasureComponent(),
+      timer: this.UrgeWithPleasureComponent(true),
       playing: true,
       life: 1,
       score: 120,
@@ -60,6 +69,7 @@ class Game extends React.Component {
       showScoreModal: false,
       scoreModalRightText: 'Tekrar',
       showAdModal: false,
+      secondAnswerGiven: false,
     };
 
     rewarded.load();
@@ -86,29 +96,43 @@ class Game extends React.Component {
         this.setState({earned: true, showRewarded: false});
       }
     });
+
+    this.correctSound = new Sound('correct_answer.mp3', Sound.MAIN_BUNDLE);
+    this.wrongSound = new Sound1('wrong_answer.mp3', Sound1.MAIN_BUNDLE);
+    this.levelFinishSound = new Sound2(
+      'level_finish_success.mp3',
+      Sound2.MAIN_BUNDLE,
+    );
+    this.clockSound = new Sound3('ticking_noise.mp3', Sound3.MAIN_BUNDLE);
   }
 
-  UrgeWithPleasureComponent = () =>
+  UrgeWithPleasureComponent = playing =>
     React.cloneElement(
       <CountdownCircleTimer
         strokeWidth={3}
         strokeLinecap="square"
         onComplete={() => this.countDownFinished()}
         size={53}
-        isPlaying
+        isPlaying={playing}
         duration={20}
         colors={[['#10D454', 0.33], ['#FF7B1B', 0.33], ['#D40D20']]}>
-        {({remainingTime, animatedColor}) => (
-          <Animated.Text style={{color: animatedColor}}>
-            {remainingTime}
-          </Animated.Text>
-        )}
+        {({remainingTime, animatedColor}) => {
+          if (remainingTime === 5) {
+            this.clockSound.play();
+          }
+          return (
+            <Animated.Text style={{color: animatedColor}}>
+              {remainingTime}
+            </Animated.Text>
+          );
+        }}
       </CountdownCircleTimer>,
     );
 
   countDownFinished = () => {
     this.setState({playing: false});
     this.answerCallback(false);
+    this.wrongSound.play();
   };
 
   componentWillUnmount() {
@@ -122,6 +146,7 @@ class Game extends React.Component {
     for (let i = 0; i < 5; i++) {
       lifes.push(
         <Image
+          resizeMode={'contain'}
           style={styles.lifeImage}
           source={{uri: i < usedLife ? 'black_heart' : 'heart'}}
         />,
@@ -131,7 +156,7 @@ class Game extends React.Component {
   };
   //TODO wrong answer callback'inde modal getirt.
   answer = (givenAnswer, stateAnswer) => {
-    const {removedOptions} = this.state;
+    const {removedOptions, doubleUsed, secondAnswerGiven} = this.state;
     if (stateAnswer !== '' || removedOptions.includes(givenAnswer)) {
       return;
     }
@@ -144,6 +169,16 @@ class Game extends React.Component {
       }, 1000);
     });
     this.setState({givenAnswer});
+    if (!doubleUsed) {
+      this.setState({
+        timer: this.UrgeWithPleasureComponent(false),
+      });
+    } else if (doubleUsed && secondAnswerGiven) {
+      this.setState({
+        timer: this.UrgeWithPleasureComponent(false),
+      });
+    }
+    this.clockSound.stop();
     setTimeout(() => {
       this.answerCallback(givenAnswer === question.rightAnswer);
     }, 2500);
@@ -155,6 +190,7 @@ class Game extends React.Component {
 
     if (double) {
       this.useDouble(isTrue, givenAnswer);
+      this.setState({secondAnswerGiven: true});
     } else {
       await this.updateScoreAndLife(isTrue);
       const {life} = this.state;
@@ -206,6 +242,7 @@ class Game extends React.Component {
     const {increaseQuestion, level} = this.props;
     if (level.currentQuestion === level.questionCount - 1) {
       this.setState({showScoreModal: true});
+      this.levelFinishSound.play();
     }
     this.resetTimer(this.resetOptionViews, increaseQuestion);
   };
@@ -213,7 +250,7 @@ class Game extends React.Component {
   resetTimer = (...functions) => {
     this.setState({timer: null}, () => {
       functions.forEach(f => f());
-      this.setState({timer: this.UrgeWithPleasureComponent()});
+      this.setState({timer: this.UrgeWithPleasureComponent(true)});
     });
   };
 
@@ -272,8 +309,10 @@ class Game extends React.Component {
     } else if (removedOptions.includes(option)) {
       return {opacity: 0.25};
     } else if (option === question.rightAnswer && option === givenAnswer) {
+      this.correctSound.play();
       return {backgroundColor: '#10D454'};
     } else if (option !== question.rightAnswer && option === givenAnswer) {
+      this.wrongSound.play();
       return {backgroundColor: '#D40D20'};
     } else {
       return {backgroundColor: '#35B0AB'};
@@ -302,6 +341,7 @@ class Game extends React.Component {
           <View style={styles.scoreModalView}>
             <View style={styles.scoreModalSuccessView}>
               <Image
+                resizeMode={'contain'}
                 style={styles.scoreModalSuccessImage}
                 source={{
                   uri:
@@ -317,6 +357,7 @@ class Game extends React.Component {
             </View>
             <View style={styles.scoreModalScoreView}>
               <Image
+                resizeMode={'contain'}
                 style={styles.scoreModalTrophyImage}
                 source={{uri: 'trophy'}}
               />
@@ -330,6 +371,7 @@ class Game extends React.Component {
                 }}>
                 <View style={styles.scoreModalHomepage}>
                   <Image
+                    resizeMode={'contain'}
                     style={styles.scoreModalButtonLeftImage}
                     source={{uri: 'arrow_left'}}
                   />
@@ -342,6 +384,7 @@ class Game extends React.Component {
                     {scoreModalRightText}
                   </Text>
                   <Image
+                    resizeMode={'contain'}
                     style={styles.scoreModalButtonRightImage}
                     source={{uri: 'arrow_right'}}
                   />
@@ -374,12 +417,17 @@ class Game extends React.Component {
             onPress={() => {
               navigation.goBack();
             }}>
-            <Image style={styles.backButton} source={{uri: 'back_button'}} />
+            <Image
+              resizeMode={'contain'}
+              style={styles.backButton}
+              source={{uri: 'back_button'}}
+            />
           </TouchableOpacity>
           {timer}
         </View>
         <View style={styles.imageView}>
           <Image
+            resizeMode={'contain'}
             style={styles.image}
             source={{
               uri: question.url,
@@ -412,28 +460,45 @@ class Game extends React.Component {
             }}>
             <View style={{...styles.joker, opacity: fiftyUsed ? 0.25 : 1}}>
               <Text style={styles.jokerText}>50/50</Text>
-              <Image style={styles.jokerImage} source={{uri: 'fifty'}} />
+
+              <Image
+                resizeMode={'contain'}
+                style={styles.jokerImage}
+                source={{uri: 'fifty'}}
+              />
             </View>
           </TouchableOpacity>
           <View style={styles.separatorView}>
-            <Image style={styles.separator} source={{uri: 'separator'}} />
+            <Image
+              resizeMode={'contain'}
+              style={styles.separator}
+              source={{uri: 'separator'}}
+            />
           </View>
           <TouchableOpacity
             onPress={() => {
               doubleUsed
                 ? null
-                : this.setState({doubleUsed: true, double: true});
+                : this.setState({
+                    doubleUsed: true,
+                    double: true,
+                  });
             }}>
             <View style={{...styles.joker, opacity: doubleUsed ? 0.25 : 1}}>
               <Text style={styles.jokerText}>2X</Text>
               <Image
+                resizeMode={'contain'}
                 style={styles.jokerImage}
                 source={{uri: 'double_chance'}}
               />
             </View>
           </TouchableOpacity>
           <View style={styles.separatorView}>
-            <Image style={styles.separator} source={{uri: 'separator'}} />
+            <Image
+              resizeMode={'contain'}
+              style={styles.separator}
+              source={{uri: 'separator'}}
+            />
           </View>
           <TouchableOpacity
             onPress={() => {
@@ -443,6 +508,7 @@ class Game extends React.Component {
             <View style={{...styles.joker, opacity: skipUsed ? 0.25 : 1}}>
               <Text style={styles.jokerText}>SKIP</Text>
               <Image
+                resizeMode={'contain'}
                 style={styles.jokerImage}
                 source={{uri: 'skip_question'}}
               />
@@ -458,6 +524,7 @@ const styles = StyleSheet.create({
   container: {
     justifyContent: 'center',
     backgroundColor: '#E4F9F5',
+    flex: 1,
   },
   image: {
     width: 100 * width,
@@ -472,8 +539,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginHorizontal: 32 * width,
-    marginTop: 22 * height,
-    marginBottom: 13 * height,
+    marginTop: 10 * height,
   },
   imageView: {
     height: 205 * height,
@@ -647,9 +713,10 @@ const styles = StyleSheet.create({
   },
 
   scoreModalHomepage: {
-    width: 134 * width,
+    width: 160 * width,
     height: 34 * height,
     flexDirection: 'row',
+    justifyContent: 'space-between',
   },
 
   scoreModalButtonLeftImage: {width: 27 * width, height: 34 * height},

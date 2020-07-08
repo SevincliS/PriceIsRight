@@ -16,5 +16,12 @@ export default [
     rightAnswer: 'd',
     url: 'image01',
   },
-  {a: '23 TL', b: '20 TL', c: '25 TL', d: '30 TL', url: 'image02'},
+  {
+    a: '23 TL',
+    b: '20 TL',
+    c: '25 TL',
+    d: '30 TL',
+    rightAnswer: 'd',
+    url: 'image02',
+  },
 ];

@@ -16,8 +16,6 @@ import {
 } from 'react-native';
 import {connect} from 'react-redux';
 import Modal from 'react-native-modal';
-import {Picker} from '@react-native-community/picker';
-import Slider from '@react-native-community/slider';
 import LinearGradient from 'react-native-linear-gradient';
 
 import {
@@ -50,12 +48,12 @@ class Levels extends React.Component {
       outputRange: ['0deg', '360deg'],
     });
 
-    this.whoosh = new Sound('musicc.mp3', Sound.MAIN_BUNDLE, error => {
+    this.music = new Sound('musicc.mp3', Sound.MAIN_BUNDLE, error => {
       if (error) {
         console.log('failed to load the sound', error);
         return;
       }
-      this.whoosh.play(success => {
+      this.music.play(success => {
         if (success) {
           console.log('successfully finished playing');
         } else {
@@ -63,24 +61,21 @@ class Levels extends React.Component {
         }
       });
 
-      this.whoosh.setVolume(0.5);
-      this.whoosh.setNumberOfLoops(-1);
+      this.music.setVolume(0.5);
+      this.music.setNumberOfLoops(-1);
     });
   }
 
   componentDidMount() {
     AppState.addEventListener('change', this._handleAppStateChange);
   }
-  componentWillUnmount() {
-    AppState.removeEventListener('change', this._handleAppStateChange);
-  }
 
   _handleAppStateChange = currentAppState => {
     if (currentAppState === 'background') {
-      this.whoosh.stop();
+      this.music.stop();
     }
     if (currentAppState === 'active') {
-      this.whoosh.play();
+      this.music.play();
     }
   };
 
@@ -127,7 +122,11 @@ class Levels extends React.Component {
             {locked ? (
               <Image style={styles.lockedImage} source={{uri: 'locked'}} />
             ) : (
-              <Image style={styles.successImage} source={{uri}} />
+              <Image
+                resizeMode={'contain'}
+                style={styles.successImage}
+                source={{uri}}
+              />
             )}
             <Text style={styles.levelText}>{id}</Text>
           </View>
@@ -155,7 +154,7 @@ class Levels extends React.Component {
                 ios_backgroundColor="#3e3e3e"
                 onValueChange={value => {
                   this.setState({soundOn: value});
-                  !value ? this.whoosh.stop() : this.whoosh.play();
+                  !value ? this.music.stop() : this.music.play();
                 }}
                 value={soundOn}
               />
@@ -185,7 +184,8 @@ class Levels extends React.Component {
                 style={{
                   width: 36 * width,
                   height: 36 * height,
-                  marginTop: 15,
+                  marginTop: 15 * height,
+                  marginRight: 14 * width,
                   transform: [{rotate: this.spin}],
                 }}
                 source={{uri: 'options'}}
@@ -193,7 +193,6 @@ class Levels extends React.Component {
             </TouchableOpacity>
           </View>
         </View>
-
         <ScrollView style={styles.levelsContainer}>
           {userLevels.map((level, index) => {
             return index % 3 === 0 ? (
@@ -231,7 +230,7 @@ const styles = StyleSheet.create({
     shadowRadius: 13.97,
   },
   lifeCountText: {
-    marginLeft: 88 * width,
+    marginLeft: 70 * width,
     marginTop: 23 * height,
     zIndex: 1,
     fontSize: 16,
@@ -251,9 +250,20 @@ const styles = StyleSheet.create({
     width: 360 * width,
     height: 65 * height,
     backgroundColor: '#C4FEF3',
+
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 12,
+    },
+    shadowOpacity: 0.58,
+    shadowRadius: 16.0,
+
+    elevation: 24,
   },
   container: {
     backgroundColor: '#E4F9F5',
+    flex: 1,
   },
   score: {
     flexDirection: 'row',
@@ -265,12 +275,12 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 10,
+      height: 8,
     },
-    shadowOpacity: 0.53,
-    shadowRadius: 13.97,
+    shadowOpacity: 0.44,
+    shadowRadius: 10.32,
 
-    elevation: 21,
+    elevation: 16,
   },
   scoreImage: {
     width: 25 * width,
