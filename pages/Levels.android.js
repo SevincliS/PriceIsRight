@@ -37,6 +37,7 @@ class Levels extends React.Component {
       soundOn: true,
       soundEffectsOn: true,
       selectedTheme: 'blue',
+      themes: ['yellow', 'black', 'red', 'green'],
     };
 
     this.spinValue = new Animated.Value(0);
@@ -141,7 +142,14 @@ class Levels extends React.Component {
     }
   };
 
-  themes = ['yellow', 'black', 'red', 'green'];
+  changeSelectedThemeImage = i => {
+    const {themes, selectedTheme} = this.state;
+    let newThemes = [...themes];
+    this.setState({selectedTheme: newThemes[i]});
+    newThemes[i] = selectedTheme;
+    this.setState({themes: newThemes});
+  };
+
   render() {
     const {userLevels} = this.props;
     const {
@@ -149,6 +157,7 @@ class Levels extends React.Component {
       soundOn,
       soundEffectsOn,
       selectedTheme,
+      themes,
     } = this.state;
     return (
       <View style={styles.container}>
@@ -205,24 +214,44 @@ class Levels extends React.Component {
               </View>
               <View style={styles.themesView}>
                 <View style={styles.themesViewRows}>
-                  <Image
-                    style={styles.themePhotos}
-                    source={{uri: 'themes_yellow'}}
-                  />
-                  <Image
-                    style={styles.themePhotos}
-                    source={{uri: 'themes_black'}}
-                  />
+                  <TouchableOpacity
+                    onPress={() => this.changeSelectedThemeImage(0)}>
+                    <Image
+                      style={styles.themePhotos}
+                      source={{
+                        uri: `themes_${themes[0]}`,
+                      }}
+                    />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => this.changeSelectedThemeImage(1)}>
+                    <Image
+                      style={styles.themePhotos}
+                      source={{
+                        uri: `themes_${themes[1]}`,
+                      }}
+                    />
+                  </TouchableOpacity>
                 </View>
                 <View style={styles.themesViewRows}>
-                  <Image
-                    style={styles.themePhotos}
-                    source={{uri: 'themes_red'}}
-                  />
-                  <Image
-                    style={styles.themePhotos}
-                    source={{uri: 'themes_green'}}
-                  />
+                  <TouchableOpacity
+                    onPress={() => this.changeSelectedThemeImage(2)}>
+                    <Image
+                      style={styles.themePhotos}
+                      source={{
+                        uri: `themes_${themes[2]}`,
+                      }}
+                    />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => this.changeSelectedThemeImage(3)}>
+                    <Image
+                      style={styles.themePhotos}
+                      source={{
+                        uri: `themes_${themes[3]}`,
+                      }}
+                    />
+                  </TouchableOpacity>
                 </View>
               </View>
             </View>
@@ -283,6 +312,11 @@ class Levels extends React.Component {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    justifyContent: 'center',
+    backgroundColor: '#E4F9F5',
+    flex: 1,
+  },
   lifeCountImage: {
     width: 121 * width,
     height: 37 * height,
@@ -461,7 +495,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   themesContainer: {
-    backgroundColor: 'black',
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: 286 * width,
