@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   Text,
   Image,
-  StyleSheet,
   Dimensions,
   ScrollView,
   Animated,
@@ -16,7 +15,10 @@ import {
 } from 'react-native';
 import {connect} from 'react-redux';
 import Modal from 'react-native-modal';
-import LinearGradient from 'react-native-linear-gradient';
+import {changeSelectedThemeAction} from '../redux/actions/themeAction';
+
+const width = parseInt(Dimensions.get('screen').width, 10) / 360;
+const height = parseInt(Dimensions.get('screen').height, 10) / 640;
 
 import {
   changeLevelAction,
@@ -24,20 +26,23 @@ import {
   changeQuestionAction,
   increaseQuestionAction,
 } from '../redux/actions/levelAction';
+import styles from '../styles/Levels.android';
 
-const width = parseInt(Dimensions.get('screen').width, 10) / 360;
-const height = parseInt(Dimensions.get('screen').height, 10) / 640;
 var Sound = require('react-native-sound');
 Sound.setCategory('Playback');
 class Levels extends React.Component {
   constructor(props) {
     super(props);
+    const {theme} = props;
+    const {selectedTheme: selectedThemeProps} = theme;
     this.state = {
       showOptionModal: false,
       soundOn: true,
       soundEffectsOn: true,
-      selectedTheme: 'blue',
-      themes: ['yellow', 'black', 'red', 'green'],
+      selectedTheme: selectedThemeProps,
+      themes: ['blue', 'yellow', 'black', 'red', 'creme'].filter(
+        el => el !== selectedThemeProps,
+      ),
     };
 
     this.spinValue = new Animated.Value(0);
@@ -143,15 +148,17 @@ class Levels extends React.Component {
   };
 
   changeSelectedThemeImage = i => {
+    const {changeSelectedTheme} = this.props;
     const {themes, selectedTheme} = this.state;
     let newThemes = [...themes];
     this.setState({selectedTheme: newThemes[i]});
+    changeSelectedTheme(selectedTheme);
     newThemes[i] = selectedTheme;
     this.setState({themes: newThemes});
   };
 
   render() {
-    const {userLevels} = this.props;
+    const {userLevels, theme: themeProps} = this.props;
     const {
       showOptionModal,
       soundOn,
@@ -159,20 +166,41 @@ class Levels extends React.Component {
       selectedTheme,
       themes,
     } = this.state;
+
+    const {styles: stylesProps} = themeProps;
+    const styleProps = stylesProps[selectedTheme];
+    const {
+      mainColor,
+      secondaryColor,
+      thirdColor,
+      holdOnAnswer,
+      levelsHeader,
+      optionModalBG,
+      optionModalSoundLeft,
+      optionModalSoundRight,
+    } = styleProps;
+
     return (
       <View style={styles.container}>
         <Modal
           onBackdropPress={() => this.setState({showOptionModal: false})}
           isVisible={showOptionModal}>
-          <LinearGradient
-            colors={['#26A5A7', '#26A5A7']}
-            style={styles.linearGradient}>
-            <View style={styles.optionModalSoundView}>
+          <View
+            style={{...styles.modalContainer, backgroundColor: optionModalBG}}>
+            <View
+              style={{
+                ...styles.optionModalSoundView,
+                backgroundColor: optionModalSoundLeft,
+              }}>
               <View style={styles.optionModalSoundTextsView}>
                 <Text style={styles.optionModalSoundTexts}>Müzik</Text>
                 <Text style={styles.optionModalSoundTexts}>Ses Efekti</Text>
               </View>
-              <View style={styles.optionModalSwitches}>
+              <View
+                style={{
+                  ...styles.optionModalSwitches,
+                  backgroundColor: optionModalSoundRight,
+                }}>
                 <Switch
                   style={{width: 41 * width, height: 20 * height}}
                   trackColor={{false: '#FFF', true: '#10D454'}}
@@ -197,13 +225,6 @@ class Levels extends React.Component {
                 />
               </View>
             </View>
-            {/**
-             *
-  themesContainer: {flexDirection: 'row'},
-  selectedThemeView: {justifyContent: 'space-between'},
-  themesView: {justifyContent: 'space-between'},
-  themesViewRows: {flexDirection: 'rows'},
-             */}
             <View style={styles.themesContainer}>
               <View style={styles.selectedThemeView}>
                 <Text style={styles.selectedThemeText}>TEMA</Text>
@@ -255,9 +276,9 @@ class Levels extends React.Component {
                 </View>
               </View>
             </View>
-          </LinearGradient>
+          </View>
         </Modal>
-        <View style={styles.header}>
+        <View style={{...styles.header, backgroundColor: levelsHeader}}>
           <TouchableOpacity>
             <View style={{flexDirection: 'row'}}>
               <Text style={styles.lifeCountText}>5</Text>
@@ -289,10 +310,11 @@ class Levels extends React.Component {
             </TouchableOpacity>
           </View>
         </View>
-        <ScrollView style={styles.levelsContainer}>
+        <ScrollView
+          style={{...styles.levelsContainer, backgroundColor: mainColor}}>
           {userLevels.map((level, index) => {
             return index % 3 === 0 ? (
-              <View style={styles.levelRow}>
+              <View style={{...styles.levelRow, backgroundColor: mainColor}}>
                 {[
                   this.levelCard(level),
                   userLevels[index + 1]
@@ -311,230 +333,9 @@ class Levels extends React.Component {
   }
 }
 
-const styles = StyleSheet.create({
-  container: {
-    justifyContent: 'center',
-    backgroundColor: '#E4F9F5',
-    flex: 1,
-  },
-  lifeCountImage: {
-    width: 121 * width,
-    height: 37 * height,
-    marginLeft: -65 * width,
-    marginTop: 15 * height,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 10,
-    },
-    shadowOpacity: 0.53,
-    shadowRadius: 13.97,
-  },
-  lifeCountText: {
-    marginLeft: 70 * width,
-    marginTop: 23 * height,
-    zIndex: 1,
-    fontSize: 16,
-    fontFamily: 'Molle-Italic',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 10,
-    },
-    shadowOpacity: 0.53,
-    shadowRadius: 13.97,
-    elevation: 21,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: 360 * width,
-    height: 65 * height,
-    backgroundColor: '#C4FEF3',
-
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 12,
-    },
-    shadowOpacity: 0.58,
-    shadowRadius: 16.0,
-    elevation: 24,
-  },
-  score: {
-    flexDirection: 'row',
-    backgroundColor: '#E4F9F5',
-    width: 118 * width,
-    height: 36 * height,
-    marginTop: 14 * height,
-    borderRadius: 12 * height,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.44,
-    shadowRadius: 10.32,
-
-    elevation: 16,
-  },
-  scoreImage: {
-    width: 25 * width,
-    height: 25 * width,
-    marginLeft: 16 * width,
-    marginTop: 7 * height,
-  },
-  scoreText: {
-    width: 80 * width,
-    height: 19 * height,
-    marginTop: 8 * height,
-    marginLeft: 9 * width,
-    fontSize: 16,
-    fontFamily: 'Molle-Italic',
-    lineHeight: 25,
-  },
-  levelsContainer: {
-    backgroundColor: '#E4F9F5',
-  },
-  levelRow: {
-    justifyContent: 'space-around',
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: 360 * width,
-    height: 64 * height,
-    backgroundColor: '#E4F9F5',
-    marginVertical: 32 * height,
-  },
-  levelCardView: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    width: 64 * width,
-    height: 64 * width,
-    backgroundColor: '#40514E',
-    borderWidth: 3 * width,
-    borderRadius: 12 * width,
-    borderStyle: 'solid',
-    borderColor: 'red',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 10,
-    },
-    shadowOpacity: 0.53,
-    shadowRadius: 13.97,
-    elevation: 21,
-  },
-  levelText: {
-    textAlign: 'center',
-    alignSelf: 'center',
-    fontSize: 25,
-    fontFamily: 'Molle-Italic',
-    color: 'white',
-    width: 40 * width,
-  },
-  lockedImage: {
-    width: 18 * width,
-    height: 24 * height,
-    position: 'absolute',
-    start: 48,
-    top: -12,
-  },
-  //TODO düzelt
-  successImage: {
-    width: 65 * width,
-    height: 26 * height,
-    marginTop: -15 * height,
-    marginLeft: -3 * width,
-    position: 'absolute',
-  },
-  linearGradient: {
-    width: 325 * width,
-    height: 403 * height,
-    borderRadius: 18,
-    alignItems: 'center',
-  },
-  optionModalSoundView: {
-    width: 286 * width,
-    height: 92 * height,
-    flexDirection: 'row',
-    marginTop: 48 * height,
-    backgroundColor: '#477A70',
-    justifyContent: 'space-between',
-    borderRadius: 12 * height,
-    elevation: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 10,
-    },
-    shadowOpacity: 0.53,
-    shadowRadius: 13.97,
-  },
-  optionModalSoundTextsView: {
-    width: 112 * width,
-    height: 61 * height,
-    marginTop: 17,
-    marginLeft: 34 * width,
-    justifyContent: 'space-between',
-  },
-  optionModalSoundTexts: {
-    fontFamily: 'OpenSans-Regular',
-    color: '#FFF',
-    fontSize: 24,
-  },
-  optionModalSwitches: {
-    width: 92 * width,
-    height: 92 * height,
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    backgroundColor: '#A5EDDF',
-    borderRadius: 12,
-  },
-  themesContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: 286 * width,
-    height: 168 * height,
-    marginTop: 48 * height,
-  },
-  selectedThemeView: {
-    width: 96 * width,
-    height: 125 * height,
-    alignItems: 'center',
-  },
-  selectedThemeText: {
-    width: 96 * width,
-    height: 33 * height,
-    fontSize: 24,
-    fontFamily: 'OpenSans-Regular',
-    color: '#fff',
-    textAlign: 'center',
-    letterSpacing: 1.6,
-  },
-  selectedThemeImage: {
-    width: 96 * width,
-    height: 96 * height,
-  },
-  themesView: {
-    width: 167 * width,
-    height: 167 * height,
-    flexDirection: 'column',
-  },
-  themesViewRows: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: 167 * width,
-    height: 72 * height,
-  },
-  themePhotos: {
-    width: 72 * width,
-    height: 72 * height,
-  },
-});
-
 const mapStateToProps = state => {
-  const {level, userLevels} = state;
-  return {level, userLevels};
+  const {level, userLevels, theme} = state;
+  return {level, userLevels, theme};
 };
 const mapDispatchToProps = dispatch => {
   return {
@@ -542,6 +343,7 @@ const mapDispatchToProps = dispatch => {
     increaseLevel: () => dispatch(increaseLevelAction()),
     changeQuestion: question => dispatch(changeQuestionAction(question)),
     increaseQuestion: () => dispatch(increaseQuestionAction()),
+    changeSelectedTheme: theme => dispatch(changeSelectedThemeAction(theme)),
   };
 };
 
