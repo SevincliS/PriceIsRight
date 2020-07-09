@@ -9,6 +9,7 @@ import {
   Animated,
   Dimensions,
   ImageBackground,
+  TouchableHighlight,
 } from 'react-native';
 import {connect} from 'react-redux';
 import {CountdownCircleTimer} from 'react-native-countdown-circle-timer';
@@ -395,23 +396,52 @@ class Game extends React.Component {
           </View>
         </Modal>
         <Modal style={styles.adModal} isVisible={showAdModal}>
-          <ImageBackground
-            resizeMode="contain"
-            style={styles.adModalImage}
-            source={{uri: 'watch_ad'}}>
-            <TouchableOpacity
-              style={styles.adModalLeftButton}
-              onPress={() => navigation.goBack()}
+          <View style={styles.adModalContainer}>
+            <Image
+              resizeMode={'contain'}
+              source={{uri: 'ad_modal_stars'}}
+              style={styles.adModalStars}
             />
             <TouchableOpacity
-              style={styles.adModalRightButton}
+              style={styles.closeButtonView}
+              onPress={() => navigation.goBack()}>
+              <Image
+                resizeMode={'contain'}
+                source={{uri: 'close'}}
+                style={styles.closeButton}
+              />
+            </TouchableOpacity>
+            <TouchableHighlight
+              style={styles.goToHomeHighlight}
+              onPress={() => navigation.goBack()}>
+              <View style={styles.goToHomeButton}>
+                <Image
+                  resizeMode="contain"
+                  source={{uri: 'home_icon'}}
+                  style={styles.homeIcon}
+                />
+                <View style={styles.adModalTextView}>
+                  <Text style={styles.adModalText}>Anasayfaya Dön</Text>
+                </View>
+              </View>
+            </TouchableHighlight>
+            <TouchableHighlight
               onPress={() => rewarded.show()}
-            />
-            <TouchableOpacity
-              style={styles.adModalCloseButton}
-              onPress={() => navigation.goBack()}
-            />
-          </ImageBackground>
+              style={styles.goToAdHighlight}>
+              <View style={styles.goToAdButton}>
+                <Image
+                  resizeMode="contain"
+                  source={{uri: 'go_to_ad_icon'}}
+                  style={styles.adIcon}
+                />
+                <View style={styles.adModalTextView}>
+                  <Text style={styles.adModalText}>
+                    Reklam İzle ve Devam Et
+                  </Text>
+                </View>
+              </View>
+            </TouchableHighlight>
+          </View>
         </Modal>
         <View style={styles.header}>
           <TouchableOpacity
