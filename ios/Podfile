@@ -18,6 +18,8 @@ def add_flipper_pods!(versions = {})
   # List all transitive dependencies for FlipperKit pods
   # to avoid them being linked in Release builds
   pod 'Flipper', versions['Flipper'], :configuration => 'Debug'
+  pod 'Firebase/Analytics'
+  pod 'Google-Mobile-Ads-SDK'
   pod 'Flipper-DoubleConversion', versions['DoubleConversion'], :configuration => 'Debug'
   pod 'Flipper-Folly', versions['Flipper-Folly'], :configuration => 'Debug'
   pod 'Flipper-Glog', versions['Flipper-Glog'], :configuration => 'Debug'
