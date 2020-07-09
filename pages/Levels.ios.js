@@ -12,7 +12,8 @@ import {
   Animated,
   Easing,
   AppState,
-  Switch,SafeAreaView
+  Switch,
+  SafeAreaView,
 } from 'react-native';
 import {connect} from 'react-redux';
 import Modal from 'react-native-modal';
@@ -32,20 +33,24 @@ Sound.setCategory('Playback');
 class Levels extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {showOptionModal: false, soundOn: true};
-
+    this.state = {
+      showOptionModal: false,
+      soundOn: true,
+      soundEffectsOn: true,
+      selectedTheme: 'blue',
+    };
     this.spinValue = new Animated.Value(0);
     Animated.loop(
       Animated.timing(this.spinValue, {
-        toValue: 1,
-        duration: 3000,
+        toValue: 5,
+        duration: 9000,
         easing: Easing.linear,
         useNativeDriver: true, // To make use of native driver for performance
       }),
     ).start();
     this.spin = this.spinValue.interpolate({
-      inputRange: [0, 1],
-      outputRange: ['0deg', '360deg'],
+      inputRange: [0, 1, 2, 3, 4, 5],
+      outputRange: ['0deg', '360deg', '360deg', '0deg', '360deg', '360deg'],
     });
 
     this.music = new Sound('musicc.mp3', Sound.MAIN_BUNDLE, error => {
@@ -61,7 +66,7 @@ class Levels extends React.Component {
         }
       });
 
-      this.music.setVolume(0.5);
+      this.music.setVolume(0.25);
       this.music.setNumberOfLoops(-1);
     });
   }
@@ -113,7 +118,6 @@ class Levels extends React.Component {
           break;
       }
       return (
-
         <TouchableOpacity
           onPress={() => {
             changeLevel(id - 1);
@@ -139,7 +143,12 @@ class Levels extends React.Component {
   themes = ['yellow', 'black', 'red', 'green'];
   render() {
     const {userLevels} = this.props;
-    const {showOptionModal, soundOn} = this.state;
+    const {
+      showOptionModal,
+      soundOn,
+      soundEffectsOn,
+      selectedTheme,
+    } = this.state;
     return (
       <SafeAreaView style={styles.container}>
         <Modal
@@ -149,15 +158,15 @@ class Levels extends React.Component {
             colors={['#26A5A7', '#26A5A7']}
             style={styles.linearGradient}>
             <View style={styles.optionModalSoundView}>
-              <View style={styles.optionModalSoundTexts}>
-                <Text>Müzik</Text>
-                <Text>Ses Efekti</Text>
+              <View style={styles.optionModalSoundTextsView}>
+                <Text style={styles.optionModalSoundTexts}>Müzik</Text>
+                <Text style={styles.optionModalSoundTexts}>Ses Efekti</Text>
               </View>
               <View style={styles.optionModalSwitches}>
                 <Switch
                   style={{width: 41 * width, height: 20 * height}}
-                  trackColor={{false: '#767577', true: '#81b0ff'}}
-                  thumbColor={soundOn ? '#f5dd4b' : '#f4f3f4'}
+                  trackColor={{false: '#FFF', true: '#10D454'}}
+                  thumbColor={'#40514E'}
                   ios_backgroundColor="#3e3e3e"
                   onValueChange={value => {
                     this.setState({soundOn: value});
@@ -167,15 +176,46 @@ class Levels extends React.Component {
                 />
                 <Switch
                   style={{width: 41 * width, height: 20 * height}}
-                  trackColor={{false: '#767577', true: '#81b0ff'}}
-                  thumbColor={soundOn ? '#f5dd4b' : '#f4f3f4'}
+                  trackColor={{false: '#FFF', true: '#10D454'}}
+                  thumbColor={'#40514E'}
                   ios_backgroundColor="#3e3e3e"
                   onValueChange={value => {
-                    this.setState({soundOn: value});
+                    this.setState({soundEffectsOn: value});
                     !value ? this.music.stop() : this.music.play();
                   }}
-                  value={soundOn}
+                  value={soundEffectsOn}
                 />
+              </View>
+            </View>
+            <View style={styles.themesContainer}>
+              <View style={styles.selectedThemeView}>
+                <Text style={styles.selectedThemeText}>TEMA</Text>
+                <Image
+                  style={styles.selectedThemeImage}
+                  source={{uri: `themes_${selectedTheme}`}}
+                />
+              </View>
+              <View style={styles.themesView}>
+                <View style={styles.themesViewRows}>
+                  <Image
+                    style={styles.themePhotos}
+                    source={{uri: 'themes_yellow'}}
+                  />
+                  <Image
+                    style={styles.themePhotos}
+                    source={{uri: 'themes_black'}}
+                  />
+                </View>
+                <View style={styles.themesViewRows}>
+                  <Image
+                    style={styles.themePhotos}
+                    source={{uri: 'themes_red'}}
+                  />
+                  <Image
+                    style={styles.themePhotos}
+                    source={{uri: 'themes_green'}}
+                  />
+                </View>
               </View>
             </View>
           </LinearGradient>
@@ -212,7 +252,7 @@ class Levels extends React.Component {
             </TouchableOpacity>
           </View>
         </View>
-        <ScrollView  style={styles.levelsContainer}>
+        <ScrollView style={styles.levelsContainer}>
           {userLevels.map((level, index) => {
             return index % 3 === 0 ? (
               <View style={styles.levelRow}>
@@ -312,7 +352,7 @@ const styles = StyleSheet.create({
   },
   levelsContainer: {
     backgroundColor: '#E4F9F5',
-    marginBottom:36 * height,
+    marginBottom: 36 * height,
   },
   levelRow: {
     justifyContent: 'space-around',
@@ -365,8 +405,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   picker: {},
-  pickerItem: {
-  },
+  pickerItem: {},
   linearGradient: {
     width: 325 * width,
     height: 403 * height,
@@ -377,17 +416,31 @@ const styles = StyleSheet.create({
     width: 286 * width,
     height: 92 * height,
     flexDirection: 'row',
+    marginTop: 48 * height,
     marginLeft: 23 * width,
     backgroundColor: '#477A70',
     justifyContent: 'space-between',
     borderRadius: 12 * height,
+    elevation: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 10,
+    },
+    shadowOpacity: 0.53,
+    shadowRadius: 13.97,
   },
-  optionModalSoundTexts: {
+  optionModalSoundTextsView: {
     width: 112 * width,
     height: 61 * height,
     marginTop: 17,
     marginLeft: 34 * width,
     justifyContent: 'space-between',
+  },
+  optionModalSoundTexts: {
+    fontFamily: 'OpenSans-Regular',
+    color: '#FFF',
+    fontSize: 24,
   },
   optionModalSwitches: {
     width: 92 * width,
@@ -395,6 +448,47 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     backgroundColor: '#A5EDDF',
     borderRadius: 12,
+  },
+  themesContainer: {
+    backgroundColor: 'black',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: 286 * width,
+    height: 168 * height,
+    marginTop: 48 * height,
+  },
+  selectedThemeView: {
+    width: 96 * width,
+    height: 125 * height,
+    alignItems: 'center',
+  },
+  selectedThemeText: {
+    width: 96 * width,
+    height: 33 * height,
+    fontSize: 24,
+    fontFamily: 'OpenSans-Regular',
+    color: '#fff',
+    textAlign: 'center',
+    letterSpacing: 1.6,
+  },
+  selectedThemeImage: {
+    width: 96 * width,
+    height: 96 * height,
+  },
+  themesView: {
+    width: 167 * width,
+    height: 167 * height,
+    flexDirection: 'column',
+  },
+  themesViewRows: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: 167 * width,
+    height: 72 * height,
+  },
+  themePhotos: {
+    width: 72 * width,
+    height: 72 * height,
   },
 });
 
