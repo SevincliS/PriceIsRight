@@ -38,6 +38,7 @@ class Levels extends React.Component {
       soundOn: true,
       soundEffectsOn: true,
       selectedTheme: 'blue',
+      themes: ['yellow', 'black', 'red', 'green'],
     };
     this.spinValue = new Animated.Value(0);
     Animated.loop(
@@ -140,7 +141,14 @@ class Levels extends React.Component {
     }
   };
 
-  themes = ['yellow', 'black', 'red', 'green'];
+  changeSelectedThemeImage = i => {
+    const {themes, selectedTheme} = this.state;
+    let newThemes = [...themes];
+    this.setState({selectedTheme: newThemes[i]});
+    newThemes[i] = selectedTheme;
+    this.setState({themes: newThemes});
+  };
+
   render() {
     const {userLevels} = this.props;
     const {
@@ -148,6 +156,7 @@ class Levels extends React.Component {
       soundOn,
       soundEffectsOn,
       selectedTheme,
+      themes,
     } = this.state;
     return (
       <SafeAreaView style={styles.container}>
@@ -197,24 +206,44 @@ class Levels extends React.Component {
               </View>
               <View style={styles.themesView}>
                 <View style={styles.themesViewRows}>
-                  <Image
-                    style={styles.themePhotos}
-                    source={{uri: 'themes_yellow'}}
-                  />
-                  <Image
-                    style={styles.themePhotos}
-                    source={{uri: 'themes_black'}}
-                  />
+                  <TouchableOpacity
+                    onPress={() => this.changeSelectedThemeImage(0)}>
+                    <Image
+                      style={styles.themePhotos}
+                      source={{
+                        uri: `themes_${themes[0]}`,
+                      }}
+                    />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => this.changeSelectedThemeImage(1)}>
+                    <Image
+                      style={styles.themePhotos}
+                      source={{
+                        uri: `themes_${themes[1]}`,
+                      }}
+                    />
+                  </TouchableOpacity>
                 </View>
                 <View style={styles.themesViewRows}>
-                  <Image
-                    style={styles.themePhotos}
-                    source={{uri: 'themes_red'}}
-                  />
-                  <Image
-                    style={styles.themePhotos}
-                    source={{uri: 'themes_green'}}
-                  />
+                  <TouchableOpacity
+                    onPress={() => this.changeSelectedThemeImage(2)}>
+                    <Image
+                      style={styles.themePhotos}
+                      source={{
+                        uri: `themes_${themes[2]}`,
+                      }}
+                    />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => this.changeSelectedThemeImage(3)}>
+                    <Image
+                      style={styles.themePhotos}
+                      source={{
+                        uri: `themes_${themes[3]}`,
+                      }}
+                    />
+                  </TouchableOpacity>
                 </View>
               </View>
             </View>
@@ -293,6 +322,7 @@ const styles = StyleSheet.create({
     marginTop: 23 * height,
     zIndex: 1,
     fontSize: 16,
+    fontFamily: 'Molle-Italic',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -316,7 +346,6 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.58,
     shadowRadius: 16.0,
-
     elevation: 24,
   },
   score: {
@@ -348,6 +377,7 @@ const styles = StyleSheet.create({
     marginTop: 8 * height,
     marginLeft: 9 * width,
     fontSize: 16,
+    fontFamily: 'Molle-Italic',
     lineHeight: 25,
   },
   levelsContainer: {
@@ -386,6 +416,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     alignSelf: 'center',
     fontSize: 25,
+    fontFamily: 'Molle-Italic',
     color: 'white',
     width: 40 * width,
   },
@@ -404,20 +435,17 @@ const styles = StyleSheet.create({
     marginLeft: -3 * width,
     position: 'absolute',
   },
-  picker: {},
-  pickerItem: {},
   linearGradient: {
     width: 325 * width,
     height: 403 * height,
     borderRadius: 18,
-    flexDirection: 'row',
+    alignItems: 'center',
   },
   optionModalSoundView: {
     width: 286 * width,
     height: 92 * height,
     flexDirection: 'row',
     marginTop: 48 * height,
-    marginLeft: 23 * width,
     backgroundColor: '#477A70',
     justifyContent: 'space-between',
     borderRadius: 12 * height,
@@ -446,11 +474,11 @@ const styles = StyleSheet.create({
     width: 92 * width,
     height: 92 * height,
     justifyContent: 'space-around',
+    alignItems: 'center',
     backgroundColor: '#A5EDDF',
     borderRadius: 12,
   },
   themesContainer: {
-    backgroundColor: 'black',
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: 286 * width,

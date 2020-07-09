@@ -447,10 +447,6 @@ const styles = StyleSheet.create({
     marginLeft: -3 * width,
     position: 'absolute',
   },
-  picker: {fontFamily: 'Molle-Italic'},
-  pickerItem: {
-    fontFamily: 'Molle-Italic',
-  },
   linearGradient: {
     width: 325 * width,
     height: 403 * height,
