@@ -2,7 +2,7 @@ const INITIAL_STATE = {
   currentLevel: 0,
   currentQuestion: 0,
   levelCount: 3,
-  questionCount: 1,
+  questionCount: 15,
   level: 15,
   life: 5,
 };

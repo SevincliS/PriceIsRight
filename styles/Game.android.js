@@ -187,6 +187,8 @@ export default StyleSheet.create({
   answerText: {
     color: '#fff',
     fontSize: 16,
+    width: 60 * width,
+    textAlign: 'center',
   },
   joker: {
     alignItems: 'center',

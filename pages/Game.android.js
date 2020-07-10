@@ -59,7 +59,7 @@ class Game extends React.Component {
     this.state = {
       timer: this.UrgeWithPleasureComponent(true),
       playing: true,
-      life: 1,
+      life: 5,
       score: 120,
       givenAnswer: '',
       removedOptions: [],
@@ -472,9 +472,7 @@ class Game extends React.Component {
           </View>
         </View>
         <View style={styles.questionView}>
-          <Text style={styles.questionText}>
-            Resimdeki ürünün fiyatı nedir ?
-          </Text>
+          <Text style={styles.questionText}>{question.text}</Text>
         </View>
         <View style={styles.firstAnswerRow}>
           {this.optionComponent('a')}

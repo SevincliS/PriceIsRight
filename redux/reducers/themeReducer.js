@@ -51,13 +51,29 @@ const INITIAL_STATE = {
       optionModalSoundRight: '#FFFE9F',
     },
   },
+  selectedStyles: {
+    blue: {
+      mainColor: '#E4F9F5',
+      secondaryColor: '#11999E',
+      thirdColor: '#35B0AB',
+      holdOnAnswer: '#40514E',
+      levelsHeader: '#C4FEF3',
+      optionModalBG: '#26A5A7',
+      optionModalSoundLeft: '#477A70',
+      optionModalSoundRight: '#A5EDDF',
+    },
+  },
   selectedTheme: 'blue',
 };
 
 const themeReducer = (state = INITIAL_STATE, action) => {
   switch (action.type) {
     case 'CHANGE_SELECTED_THEME':
-      return {...state, selectedTheme: action.theme};
+      return {
+        ...state,
+        selectedTheme: action.theme,
+        selectedStyles: state.styles[action.theme],
+      };
     default:
       return state;
   }
