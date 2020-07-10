@@ -152,7 +152,7 @@ class Levels extends React.Component {
     const {themes, selectedTheme} = this.state;
     let newThemes = [...themes];
     this.setState({selectedTheme: newThemes[i]});
-    changeSelectedTheme(selectedTheme);
+    changeSelectedTheme(newThemes[i]);
     newThemes[i] = selectedTheme;
     this.setState({themes: newThemes});
   };

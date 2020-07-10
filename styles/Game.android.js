@@ -97,7 +97,24 @@ export default StyleSheet.create({
   },
   backButton: {
     width: 53 * width,
-    height: 53 * height,
+    height: 53 * width,
+    borderRadius: 53 / 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  backIcon: {
+    width: 12 * width,
+    height: 20 * height,
+    marginLeft: -3 * width,
+    marginTop: -1 * height,
+  },
+
+  countDownInner: {
+    width: 50 * width,
+    height: 50 * width,
+    borderRadius: 50 / 2,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   header: {
     flexDirection: 'row',
@@ -163,17 +180,6 @@ export default StyleSheet.create({
     paddingHorizontal: 41 * width,
     paddingVertical: 13 * height,
     marginLeft: 32 * width,
-  },
-  b: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#35B0AB',
-    borderRadius: 9,
-    width: 130 * width,
-    height: 45 * height,
-    paddingHorizontal: 41 * width,
-    paddingVertical: 13 * height,
-    marginLeft: 36 * width,
   },
   secondAnswerRow: {
     flexDirection: 'row',

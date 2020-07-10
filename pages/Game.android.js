@@ -7,8 +7,6 @@ import {
   Text,
   Image,
   Animated,
-  Dimensions,
-  ImageBackground,
   TouchableHighlight,
 } from 'react-native';
 import {connect} from 'react-redux';
@@ -24,7 +22,6 @@ import {
   increaseLifeAction,
   decreaseLifeAction,
 } from '../redux/actions/levelAction';
-import {changeSelectedThemeAction} from '../redux/actions/themeAction';
 import {
   RewardedAd,
   RewardedAdEventType,
@@ -41,9 +38,6 @@ const rewarded = RewardedAd.createForAdRequest(adUnitId, {
   keywords: ['game', 'playing'],
 });
 
-const width = parseInt(Dimensions.get('screen').width, 10) / 360;
-const height = parseInt(Dimensions.get('screen').height, 10) / 640;
-
 var Sound = require('react-native-sound');
 Sound.setCategory('Playback');
 var Sound1 = require('react-native-sound');
@@ -56,6 +50,7 @@ Sound3.setCategory('Playback');
 class Game extends React.Component {
   constructor(props) {
     super(props);
+
     this.state = {
       timer: this.UrgeWithPleasureComponent(true),
       playing: true,
@@ -73,7 +68,6 @@ class Game extends React.Component {
       showAdModal: false,
       secondAnswerGiven: false,
     };
-
     rewarded.load();
 
     this.eventListener = rewarded.onAdEvent((type, error, reward) => {
@@ -111,7 +105,7 @@ class Game extends React.Component {
   UrgeWithPleasureComponent = playing =>
     React.cloneElement(
       <CountdownCircleTimer
-        strokeWidth={3}
+        strokeWidth={5}
         strokeLinecap="square"
         onComplete={() => this.countDownFinished()}
         size={53}
@@ -119,13 +113,26 @@ class Game extends React.Component {
         duration={20}
         colors={[['#10D454', 0.33], ['#FF7B1B', 0.33], ['#D40D20']]}>
         {({remainingTime, animatedColor}) => {
+          const {theme} = this.props;
+          const {selectedStyles, selectedTheme} = theme;
+          const {mainColor, secondaryColor} = selectedStyles;
           if (remainingTime === 5) {
             this.clockSound.play();
           }
           return (
-            <Animated.Text style={{color: animatedColor}}>
-              {remainingTime}
-            </Animated.Text>
+            <View
+              style={{
+                ...styles.countDownInner,
+                backgroundColor:
+                  selectedTheme === 'blue' ? mainColor : secondaryColor,
+              }}>
+              <Animated.Text
+                style={{
+                  color: selectedTheme === 'blue' ? 'black' : 'white',
+                }}>
+                {remainingTime}
+              </Animated.Text>
+            </View>
           );
         }}
       </CountdownCircleTimer>,
@@ -301,13 +308,15 @@ class Game extends React.Component {
       holdOnAnswer,
       removedOptions,
     } = this.state;
-    const {level} = this.props;
+    const {level, theme} = this.props;
+    const {selectedStyles} = theme;
+    const {holdOnAnswerBG, thirdColor} = selectedStyles;
     const {currentLevel: cl, currentQuestion: cq} = level;
     const question = levels[cl][cq];
     if (option === holdOnAnswer) {
-      return {backgroundColor: '#40514E'};
+      return {backgroundColor: holdOnAnswerBG};
     } else if (doubleOption === option) {
-      return {backgroundColor: '#40514E', opacity: 0.25};
+      return {backgroundColor: holdOnAnswerBG, opacity: 0.25};
     } else if (removedOptions.includes(option)) {
       return {opacity: 0.25};
     } else if (option === question.rightAnswer && option === givenAnswer) {
@@ -317,7 +326,7 @@ class Game extends React.Component {
       this.wrongSound.play();
       return {backgroundColor: '#D40D20'};
     } else {
-      return {backgroundColor: '#35B0AB'};
+      return {backgroundColor: thirdColor};
     }
   };
 
@@ -334,13 +343,16 @@ class Game extends React.Component {
       starCount,
       scoreModalRightText,
     } = this.state;
-    const {level, navigation, increaseQuestion} = this.props;
+    const {level, navigation, increaseQuestion, theme} = this.props;
     const {currentLevel: cl, currentQuestion: cq} = level;
     const question = levels[cl][cq];
+    const {selectedStyles} = theme;
+    const {mainColor, secondaryColor, thirdColor} = selectedStyles;
+
     return (
-      <View style={styles.container}>
+      <View style={{...styles.container, backgroundColor: mainColor}}>
         <Modal style={styles.scoreModal} isVisible={showScoreModal}>
-          <View style={styles.scoreModalView}>
+          <View style={{...styles.scoreModalView, backgroundColor: mainColor}}>
             <View style={styles.scoreModalSuccessView}>
               <Image
                 resizeMode={'contain'}
@@ -448,11 +460,14 @@ class Game extends React.Component {
             onPress={() => {
               navigation.goBack();
             }}>
-            <Image
-              resizeMode={'contain'}
-              style={styles.backButton}
-              source={{uri: 'back_button'}}
-            />
+            <View
+              style={{...styles.backButton, backgroundColor: secondaryColor}}>
+              <Image
+                style={styles.backIcon}
+                resizeMode={'contain'}
+                source={{uri: 'back_icon'}}
+              />
+            </View>
           </TouchableOpacity>
           {timer}
         </View>
@@ -471,7 +486,7 @@ class Game extends React.Component {
             <Text style={styles.scoreText}> Score: {score}</Text>
           </View>
         </View>
-        <View style={styles.questionView}>
+        <View style={{...styles.questionView, backgroundColor: thirdColor}}>
           <Text style={styles.questionText}>{question.text}</Text>
         </View>
         <View style={styles.firstAnswerRow}>
@@ -482,7 +497,7 @@ class Game extends React.Component {
           {this.optionComponent('c')}
           {this.optionComponent('d')}
         </View>
-        <View style={styles.jokerView}>
+        <View style={{...styles.jokerView, backgroundColor: secondaryColor}}>
           <TouchableOpacity
             onPress={() => {
               this.onPressFifty(question);
