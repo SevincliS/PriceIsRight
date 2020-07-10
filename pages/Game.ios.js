@@ -74,7 +74,8 @@ class Game extends React.Component {
       currentQuestion: 'none',
     };
     rewarded.load();
-
+    const {status} = this.props;
+    rewarded.requestNonPersonalizedAdsOnly = status;
     this.eventListener = rewarded.onAdEvent((type, error, reward) => {
       if (type === 'closed' && this.state.earned) {
         const {increaseLife, increaseQuestion} = this.props;
@@ -613,7 +614,8 @@ class Game extends React.Component {
 
 const mapStateToProps = state => {
   const {level, theme, preferences} = state;
-  return {level, theme, soundEffects: preferences.soundEffects};
+  const {status} = state.consent;
+  return {level, theme, soundEffects: preferences.soundEffects, status};
 };
 const mapDispatchToProps = dispatch => {
   return {

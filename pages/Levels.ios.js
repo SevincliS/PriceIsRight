@@ -28,7 +28,8 @@ import {
   increaseQuestionAction,
 } from '../redux/actions/levelAction';
 import styles from '../styles/Levels.ios';
-
+import {setConsent as setConsentAction} from '../redux/actions/consentAction';
+import {AdsConsent, AdsConsentStatus} from '@react-native-firebase/admob';
 const width = parseInt(Dimensions.get('screen').width, 10) / 360;
 const height = parseInt(Dimensions.get('screen').height, 10) / 640;
 var Sound = require('react-native-sound');
@@ -36,7 +37,6 @@ Sound.setCategory('Playback');
 class Levels extends React.Component {
   constructor(props) {
     super(props);
-
     const {theme, preferences} = props;
     const {selectedTheme: selectedThemeProps} = theme;
     this.state = {
@@ -80,9 +80,32 @@ class Levels extends React.Component {
     });
   }
 
-  componentDidMount() {
+  componentDidMount = async () => {
+    const consentInfo = await AdsConsent.requestInfoUpdate([
+      'pub-4313673729121143',
+    ]);
+    const {setConsent} = this.props;
+    if (consentInfo.isRequestLocationInEeaOrUnknown) {
+      const status = await AdsConsent.getStatus();
+      if (status === AdsConsentStatus.UNKNOWN) {
+        const formResult = await AdsConsent.showForm({
+          privacyPolicy: 'https://invertase.io/privacy-policy',
+          withPersonalizedAds: true,
+          withNonPersonalizedAds: true,
+        });
+        if (formResult.status === AdsConsentStatus.PERSONALIZED) {
+          setConsent({status: false});
+        } else if (formResult.status === AdsConsentStatus.NON_PERSONALIZED) {
+          setConsent({status: true});
+        }
+      } else if (status === AdsConsentStatus.PERSONALIZED) {
+        setConsent({status: false});
+      } else if (status === AdsConsentStatus.NON_PERSONALIZED) {
+        setConsent({status: true});
+      }
+    }
     AppState.addEventListener('change', this._handleAppStateChange);
-  }
+  };
   componentDidUpdate(prevProps) {
     const {preferences} = this.props;
     const {music} = preferences;
@@ -190,154 +213,157 @@ class Levels extends React.Component {
       optionModalSoundRight,
     } = selectedStyles;
     return (
-<View style={{backgroundColor:'#fff',flex:1}}>
-      <SafeAreaView style={styles.container}>
-        <Modal
-          onBackdropPress={() => this.setState({showOptionModal: false})}
-          isVisible={showOptionModal}>
-          <View
-            style={{...styles.modalContainer, backgroundColor: optionModalBG}}>
+      <View style={{backgroundColor: '#fff', flex: 1}}>
+        <SafeAreaView style={styles.container}>
+          <Modal
+            onBackdropPress={() => this.setState({showOptionModal: false})}
+            isVisible={showOptionModal}>
             <View
               style={{
-                ...styles.optionModalSoundView,
-                backgroundColor: optionModalSoundLeft,
+                ...styles.modalContainer,
+                backgroundColor: optionModalBG,
               }}>
-              <View style={styles.optionModalSoundTextsView}>
-                <Text style={styles.optionModalSoundTexts}>Müzik</Text>
-                <Text style={styles.optionModalSoundTexts}>Ses Efekti</Text>
-              </View>
               <View
                 style={{
-                  ...styles.optionModalSwitches,
-                  backgroundColor: optionModalSoundRight,
+                  ...styles.optionModalSoundView,
+                  backgroundColor: optionModalSoundLeft,
                 }}>
-                <Switch
-                  style={{width: 41 * width, height: 20 * height}}
-                  trackColor={{false: '#FFF', true: '#10D454'}}
-                  thumbColor={'#40514E'}
-                  ios_backgroundColor="#3e3e3e"
-                  onValueChange={() => {
-                    switchMusic();
-                  }}
-                  value={music}
-                />
-                <Switch
-                  style={{width: 41 * width, height: 20 * height}}
-                  trackColor={{false: '#FFF', true: '#10D454'}}
-                  thumbColor={'#40514E'}
-                  ios_backgroundColor="#3e3e3e"
-                  onValueChange={() => {
-                    switchSoundEffects();
-                  }}
-                  value={soundEffects}
-                />
+                <View style={styles.optionModalSoundTextsView}>
+                  <Text style={styles.optionModalSoundTexts}>Müzik</Text>
+                  <Text style={styles.optionModalSoundTexts}>Ses Efekti</Text>
+                </View>
+                <View
+                  style={{
+                    ...styles.optionModalSwitches,
+                    backgroundColor: optionModalSoundRight,
+                  }}>
+                  <Switch
+                    style={{width: 41 * width, height: 20 * height}}
+                    trackColor={{false: '#FFF', true: '#10D454'}}
+                    thumbColor={'#40514E'}
+                    ios_backgroundColor="#3e3e3e"
+                    onValueChange={() => {
+                      switchMusic();
+                    }}
+                    value={music}
+                  />
+                  <Switch
+                    style={{width: 41 * width, height: 20 * height}}
+                    trackColor={{false: '#FFF', true: '#10D454'}}
+                    thumbColor={'#40514E'}
+                    ios_backgroundColor="#3e3e3e"
+                    onValueChange={() => {
+                      switchSoundEffects();
+                    }}
+                    value={soundEffects}
+                  />
+                </View>
+              </View>
+              <View style={styles.themesContainer}>
+                <View style={styles.selectedThemeView}>
+                  <Text style={styles.selectedThemeText}>TEMA</Text>
+                  <Image
+                    style={styles.selectedThemeImage}
+                    source={{uri: `themes_${selectedTheme}`}}
+                  />
+                </View>
+                <View style={styles.themesView}>
+                  <View style={styles.themesViewRows}>
+                    <TouchableOpacity
+                      onPress={() => this.changeSelectedThemeImage(0)}>
+                      <Image
+                        style={styles.themePhotos}
+                        source={{
+                          uri: `themes_${themes[0]}`,
+                        }}
+                      />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => this.changeSelectedThemeImage(1)}>
+                      <Image
+                        style={styles.themePhotos}
+                        source={{
+                          uri: `themes_${themes[1]}`,
+                        }}
+                      />
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.themesViewRows}>
+                    <TouchableOpacity
+                      onPress={() => this.changeSelectedThemeImage(2)}>
+                      <Image
+                        style={styles.themePhotos}
+                        source={{
+                          uri: `themes_${themes[2]}`,
+                        }}
+                      />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => this.changeSelectedThemeImage(3)}>
+                      <Image
+                        style={styles.themePhotos}
+                        source={{
+                          uri: `themes_${themes[3]}`,
+                        }}
+                      />
+                    </TouchableOpacity>
+                  </View>
+                </View>
               </View>
             </View>
-            <View style={styles.themesContainer}>
-              <View style={styles.selectedThemeView}>
-                <Text style={styles.selectedThemeText}>TEMA</Text>
+          </Modal>
+          <View style={{...styles.header, backgroundColor: levelsHeader}}>
+            <TouchableOpacity>
+              <View style={{flexDirection: 'row'}}>
+                <Text style={styles.lifeCountText}>5</Text>
                 <Image
-                  style={styles.selectedThemeImage}
-                  source={{uri: `themes_${selectedTheme}`}}
+                  style={styles.lifeCountImage}
+                  source={{uri: 'life_count'}}
                 />
               </View>
-              <View style={styles.themesView}>
-                <View style={styles.themesViewRows}>
-                  <TouchableOpacity
-                    onPress={() => this.changeSelectedThemeImage(0)}>
-                    <Image
-                      style={styles.themePhotos}
-                      source={{
-                        uri: `themes_${themes[0]}`,
-                      }}
-                    />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => this.changeSelectedThemeImage(1)}>
-                    <Image
-                      style={styles.themePhotos}
-                      source={{
-                        uri: `themes_${themes[1]}`,
-                      }}
-                    />
-                  </TouchableOpacity>
-                </View>
-                <View style={styles.themesViewRows}>
-                  <TouchableOpacity
-                    onPress={() => this.changeSelectedThemeImage(2)}>
-                    <Image
-                      style={styles.themePhotos}
-                      source={{
-                        uri: `themes_${themes[2]}`,
-                      }}
-                    />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => this.changeSelectedThemeImage(3)}>
-                    <Image
-                      style={styles.themePhotos}
-                      source={{
-                        uri: `themes_${themes[3]}`,
-                      }}
-                    />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-          </View>
-        </Modal>
-        <View style={{...styles.header, backgroundColor: levelsHeader}}>
-          <TouchableOpacity>
-            <View style={{flexDirection: 'row'}}>
-              <Text style={styles.lifeCountText}>5</Text>
-              <Image
-                style={styles.lifeCountImage}
-                source={{uri: 'life_count'}}
-              />
-            </View>
-          </TouchableOpacity>
-          <View style={styles.score}>
-            <Image style={styles.scoreImage} source={{uri: 'trophy'}} />
-            <Text style={styles.scoreText}>50000</Text>
-          </View>
-          <View>
-            <TouchableOpacity
-              onPress={() => {
-                this.setState({showOptionModal: true});
-              }}>
-              <Animated.Image
-                style={{
-                  width: 36 * width,
-                  height: 36 * height,
-                  marginTop: 15 * height,
-                  marginRight: 14 * width,
-                  transform: [{rotate: this.spin}],
-                }}
-                source={{uri: 'options'}}
-              />
             </TouchableOpacity>
+            <View style={styles.score}>
+              <Image style={styles.scoreImage} source={{uri: 'trophy'}} />
+              <Text style={styles.scoreText}>50000</Text>
+            </View>
+            <View>
+              <TouchableOpacity
+                onPress={() => {
+                  this.setState({showOptionModal: true});
+                }}>
+                <Animated.Image
+                  style={{
+                    width: 36 * width,
+                    height: 36 * height,
+                    marginTop: 15 * height,
+                    marginRight: 14 * width,
+                    transform: [{rotate: this.spin}],
+                  }}
+                  source={{uri: 'options'}}
+                />
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-        <ScrollView
-          style={{...styles.levelsContainer, backgroundColor: mainColor}}>
-          {userLevels.map((level, index) => {
-            return index % 3 === 0 ? (
-              <View style={{...styles.levelRow, backgroundColor: mainColor}}>
-                {[
-                  this.levelCard(level),
-                  userLevels[index + 1]
-                    ? this.levelCard(userLevels[index + 1])
-                    : null,
-                  userLevels[index + 2]
-                    ? this.levelCard(userLevels[index + 2])
-                    : null,
-                ]}
-              </View>
-            ) : null;
-          })}
-        </ScrollView>
-      </SafeAreaView>
-</View>
+          <ScrollView
+            style={{...styles.levelsContainer, backgroundColor: mainColor}}>
+            {userLevels.map((level, index) => {
+              return index % 3 === 0 ? (
+                <View style={{...styles.levelRow, backgroundColor: mainColor}}>
+                  {[
+                    this.levelCard(level),
+                    userLevels[index + 1]
+                      ? this.levelCard(userLevels[index + 1])
+                      : null,
+                    userLevels[index + 2]
+                      ? this.levelCard(userLevels[index + 2])
+                      : null,
+                  ]}
+                </View>
+              ) : null;
+            })}
+          </ScrollView>
+        </SafeAreaView>
+      </View>
     );
   }
 }
@@ -355,6 +381,7 @@ const mapDispatchToProps = dispatch => {
     changeSelectedTheme: theme => dispatch(changeSelectedThemeAction(theme)),
     switchMusic: () => dispatch(switchMusicAction()),
     switchSoundEffects: () => dispatch(switchSoundEffectsAction()),
+    setConsent: consent => dispatch(setConsentAction(consent)),
   };
 };
 

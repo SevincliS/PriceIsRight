@@ -27,7 +27,8 @@ import {
   increaseQuestionAction,
 } from '../redux/actions/levelAction';
 import styles from '../styles/Levels.android';
-
+import {setConsent as setConsentAction} from '../redux/actions/consentAction';
+import {AdsConsent, AdsConsentStatus} from '@react-native-firebase/admob';
 const width = parseInt(Dimensions.get('screen').width, 10) / 360;
 const height = parseInt(Dimensions.get('screen').height, 10) / 640;
 
@@ -36,10 +37,7 @@ Sound.setCategory('Playback');
 class Levels extends React.Component {
   constructor(props) {
     super(props);
-    console.log(new Date().toString());
-    console.log(new Date().getMinutes());
     const {theme, preferences} = props;
-    console.log(preferences);
     const {selectedTheme: selectedThemeProps} = theme;
     this.state = {
       showOptionModal: false,
@@ -48,7 +46,6 @@ class Levels extends React.Component {
         el => el !== selectedThemeProps,
       ),
     };
-
     this.spinValue = new Animated.Value(0);
     Animated.loop(
       Animated.timing(this.spinValue, {
@@ -58,7 +55,6 @@ class Levels extends React.Component {
         useNativeDriver: true, // To make use of native driver for performance
       }),
     ).start();
-
     this.spin = this.spinValue.interpolate({
       inputRange: [0, 1, 2, 3, 4, 5],
       outputRange: ['0deg', '360deg', '360deg', '0deg', '360deg', '360deg'],
@@ -84,9 +80,32 @@ class Levels extends React.Component {
     });
   }
 
-  componentDidMount() {
+  componentDidMount = async () => {
+    const consentInfo = await AdsConsent.requestInfoUpdate([
+      'pub-4313673729121143',
+    ]);
+    const {setConsent} = this.props;
+    if (consentInfo.isRequestLocationInEeaOrUnknown) {
+      const status = await AdsConsent.getStatus();
+      if (status === AdsConsentStatus.UNKNOWN) {
+        const formResult = await AdsConsent.showForm({
+          privacyPolicy: 'https://invertase.io/privacy-policy',
+          withPersonalizedAds: true,
+          withNonPersonalizedAds: true,
+        });
+        if (formResult.status === AdsConsentStatus.PERSONALIZED) {
+          setConsent({status: false});
+        } else if (formResult.status === AdsConsentStatus.NON_PERSONALIZED) {
+          setConsent({status: true});
+        }
+      } else if (status === AdsConsentStatus.PERSONALIZED) {
+        setConsent({status: false});
+      } else if (status === AdsConsentStatus.NON_PERSONALIZED) {
+        setConsent({status: true});
+      }
+    }
     AppState.addEventListener('change', this._handleAppStateChange);
-  }
+  };
   componentDidUpdate(prevProps) {
     const {preferences} = this.props;
     const {music} = preferences;
@@ -209,7 +228,6 @@ class Levels extends React.Component {
       optionModalSoundLeft,
       optionModalSoundRight,
     } = selectedStyles;
-
     return (
       <View style={styles.container}>
         <Modal
@@ -374,6 +392,7 @@ const mapDispatchToProps = dispatch => {
     changeSelectedTheme: theme => dispatch(changeSelectedThemeAction(theme)),
     switchMusic: () => dispatch(switchMusicAction()),
     switchSoundEffects: () => dispatch(switchSoundEffectsAction()),
+    setConsent: consent => dispatch(setConsentAction(consent)),
   };
 };
 
