@@ -7,7 +7,6 @@ import {
   Text,
   Image,
   Animated,
-  ImageBackground,
   TouchableHighlight,
 } from 'react-native';
 import {connect} from 'react-redux';
@@ -22,7 +21,9 @@ import {
   increaseQuestionAction,
   increaseLifeAction,
   decreaseLifeAction,
+  increaseUserScoreAction,
 } from '../redux/actions/levelAction';
+import {changeUserLevelAction} from '../redux/actions/userLevelsActions';
 import {
   RewardedAd,
   RewardedAdEventType,
@@ -51,11 +52,13 @@ Sound3.setCategory('Playback');
 class Game extends React.Component {
   constructor(props) {
     super(props);
+    const {level} = props;
+    //const {life} = level;
     this.state = {
       timer: this.UrgeWithPleasureComponent(true),
       playing: true,
       life: 5,
-      score: 120,
+      score: 0,
       givenAnswer: '',
       removedOptions: [],
       fiftyUsed: false,
@@ -240,10 +243,13 @@ class Game extends React.Component {
   };
 
   updateScoreAndLife = async isTrue => {
+    const {level} = this.props;
+    const {currentLevel} = level;
+    const additionalScore = Math.floor(currentLevel / 5) + 1;
     return new Promise((res, rej) => {
       this.setState(
         prevState => ({
-          score: isTrue ? prevState.score + 2 : prevState.score,
+          score: isTrue ? prevState.score + additionalScore : prevState.score,
           life: isTrue
             ? prevState.life
             : prevState.life > 0
@@ -271,9 +277,19 @@ class Game extends React.Component {
   };
 
   goToNextQuestion = () => {
-    const {increaseQuestion, level, soundEffects} = this.props;
-    if (level.currentQuestion === level.questionCount - 1) {
+    const {score} = this.state;
+    const {
+      increaseQuestion,
+      level,
+      soundEffects,
+      increaseTotalUserScore,
+      changeUserLevel,
+    } = this.props;
+    const {currentLevel, currentQuestion, questionCount} = level;
+    if (currentQuestion === questionCount - 1) {
       this.setState({showScoreModal: true});
+      changeUserLevel(currentLevel, {successRate: 1});
+      increaseTotalUserScore(score);
       if (soundEffects) {
         this.levelFinishSound.play();
       }
@@ -607,6 +623,9 @@ const mapDispatchToProps = dispatch => {
     increaseQuestion: () => dispatch(increaseQuestionAction()),
     increaseLife: () => dispatch(increaseLifeAction()),
     decreaseLife: () => dispatch(decreaseLifeAction()),
+    increaseTotalUserScore: () => dispatch(increaseUserScoreAction()),
+    changeUserLevel: (levelId, newFields) =>
+      dispatch(changeUserLevelAction(levelId, newFields)),
   };
 };
 
