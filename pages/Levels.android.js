@@ -25,6 +25,7 @@ import {
   increaseLevelAction,
   changeQuestionAction,
   increaseQuestionAction,
+  updateLifeAction,
 } from '../redux/actions/levelAction';
 import styles from '../styles/Levels.android';
 import {setConsent as setConsentAction} from '../redux/actions/consentAction';
@@ -105,6 +106,7 @@ class Levels extends React.Component {
       }
     }
     AppState.addEventListener('change', this._handleAppStateChange);
+    this.checkLifes();
   };
   componentDidUpdate(prevProps) {
     const {preferences} = this.props;
@@ -120,6 +122,7 @@ class Levels extends React.Component {
   _handleAppStateChange = currentAppState => {
     const {preferences} = this.props;
     const {music} = preferences;
+    this.checkLifes();
     if (currentAppState === 'background') {
       this.music.stop();
     }
@@ -128,6 +131,19 @@ class Levels extends React.Component {
     }
   };
 
+  checkLifes = async () => {
+    const {level, updateLife} = this.props;
+    const {lifeLostTimestamp, life} = level;
+    if (!lifeLostTimestamp) {
+      return;
+    } else {
+      let timestamp = this.getGlobalTime();
+      let timeDifference = timestamp - lifeLostTimestamp;
+      let hourlyDifference = timeDifference / (1000 * 36000);
+      let newLife = life + hourlyDifference;
+      updateLife(newLife);
+    }
+  };
   levelCard = ({id, locked, successRate, difficulty}) => {
     const {navigation, changeLevel} = this.props;
     let uri;
@@ -209,7 +225,6 @@ class Levels extends React.Component {
         });
     });
   };
-
   render() {
     const {
       userLevels,
@@ -392,7 +407,7 @@ const mapDispatchToProps = dispatch => {
     changeSelectedTheme: theme => dispatch(changeSelectedThemeAction(theme)),
     switchMusic: () => dispatch(switchMusicAction()),
     switchSoundEffects: () => dispatch(switchSoundEffectsAction()),
-    setConsent: consent => dispatch(setConsentAction(consent)),
+    updateLife: life => dispatch(updateLifeAction(life)),
   };
 };
 

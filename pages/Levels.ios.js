@@ -26,6 +26,7 @@ import {
   increaseLevelAction,
   changeQuestionAction,
   increaseQuestionAction,
+  updateLifeAction,
 } from '../redux/actions/levelAction';
 import styles from '../styles/Levels.ios';
 import {setConsent as setConsentAction} from '../redux/actions/consentAction';
@@ -105,6 +106,7 @@ class Levels extends React.Component {
       }
     }
     AppState.addEventListener('change', this._handleAppStateChange);
+    this.checkLifes();
   };
   componentDidUpdate(prevProps) {
     const {preferences} = this.props;
@@ -118,14 +120,30 @@ class Levels extends React.Component {
     }
   }
   _handleAppStateChange = currentAppState => {
+    const {preferences} = this.props;
+    const {music} = preferences;
+    this.checkLifes();
     if (currentAppState === 'background') {
       this.music.stop();
     }
-    if (currentAppState === 'active') {
+    if (currentAppState === 'active' && music) {
       this.music.play();
     }
   };
 
+  checkLifes = async () => {
+    const {level, updateLife} = this.props;
+    const {lifeLostTimestamp, life} = level;
+    if (!lifeLostTimestamp) {
+      return;
+    } else {
+      let timestamp = this.getGlobalTime();
+      let timeDifference = timestamp - lifeLostTimestamp;
+      let hourlyDifference = timeDifference / (1000 * 36000);
+      let newLife = life + hourlyDifference;
+      updateLife(newLife);
+    }
+  };
   levelCard = ({id, locked, successRate, difficulty}) => {
     const {navigation, changeLevel} = this.props;
     let uri;
@@ -194,6 +212,19 @@ class Levels extends React.Component {
     this.setState({themes: newThemes});
   };
 
+  getGlobalTime = () => {
+    return new Promise((res, rej) => {
+      fetch('http://worldclockapi.com/api/json/utc/now')
+        .then(response => response.json())
+        .then(data => {
+          const {currentDateTime} = data;
+          res(new Date(currentDateTime).getTime());
+        })
+        .catch(err => {
+          rej(err);
+        });
+    });
+  };
   render() {
     const {
       userLevels,
@@ -381,6 +412,7 @@ const mapDispatchToProps = dispatch => {
     changeSelectedTheme: theme => dispatch(changeSelectedThemeAction(theme)),
     switchMusic: () => dispatch(switchMusicAction()),
     switchSoundEffects: () => dispatch(switchSoundEffectsAction()),
+    updateLife: life => dispatch(updateLifeAction(life)),
     setConsent: consent => dispatch(setConsentAction(consent)),
   };
 };

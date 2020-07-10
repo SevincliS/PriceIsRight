@@ -234,7 +234,8 @@ class Game extends React.Component {
         this.setState({showAdModal: true});
       } else if (!isTrue) {
         this.setState({playing: false});
-        decreaseLife();
+        let timestamp = await this.getGlobalTime();
+        decreaseLife(timestamp);
         this.goToNextQuestion();
       } else {
         this.goToNextQuestion();
@@ -372,6 +373,20 @@ class Game extends React.Component {
     } else {
       return {backgroundColor: thirdColor};
     }
+  };
+
+  getGlobalTime = () => {
+    return new Promise((res, rej) => {
+      fetch('http://worldclockapi.com/api/json/utc/now')
+        .then(response => response.json())
+        .then(data => {
+          const {currentDateTime} = data;
+          res(new Date(currentDateTime).getTime());
+        })
+        .catch(err => {
+          rej(err);
+        });
+    });
   };
 
   render() {
@@ -623,7 +638,7 @@ const mapDispatchToProps = dispatch => {
     changeQuestion: question => dispatch(changeQuestionAction(question)),
     increaseQuestion: () => dispatch(increaseQuestionAction()),
     increaseLife: () => dispatch(increaseLifeAction()),
-    decreaseLife: () => dispatch(decreaseLifeAction()),
+    decreaseLife: timestamp => dispatch(decreaseLifeAction(timestamp)),
     increaseTotalUserScore: () => dispatch(increaseUserScoreAction()),
     changeUserLevel: (levelId, newFields) =>
       dispatch(changeUserLevelAction(levelId, newFields)),

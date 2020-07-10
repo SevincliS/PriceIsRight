@@ -16,8 +16,9 @@ const increaseQuestionAction = () => ({
   type: 'INCREASE_QUESTION',
 });
 
-const decreaseLifeAction = () => ({
-  type: 'INCREASE_LIFE',
+const decreaseLifeAction = timestamp => ({
+  type: 'DECREASE_LIFE',
+  timestamp,
 });
 
 const increaseLifeAction = () => ({
@@ -29,6 +30,11 @@ const increaseUserScoreAction = score => ({
   score,
 });
 
+const updateLifeAction = life => ({
+  type: 'UPDATE_LIFE',
+  life,
+});
+
 export {
   changeLevelAction,
   increaseLevelAction,
@@ -37,4 +43,5 @@ export {
   decreaseLifeAction,
   increaseLifeAction,
   increaseUserScoreAction,
+  updateLifeAction,
 };
