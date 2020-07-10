@@ -5,6 +5,7 @@ const INITIAL_STATE = {
   questionCount: 15,
   level: 15,
   life: 5,
+  score: 0,
 };
 
 const levelReducer = (state = INITIAL_STATE, action) => {
@@ -21,6 +22,8 @@ const levelReducer = (state = INITIAL_STATE, action) => {
       return {...state, life: state.life < 5 ? state.life + 1 : state.life};
     case 'DECREASE_LIFE':
       return {...state, life: state.life > 0 ? state.life - 1 : state.life};
+    case 'INCREASE_USER_SCORE':
+      return {...state, score: state.score + action.score};
     default:
       return state;
   }
