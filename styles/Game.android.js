@@ -108,7 +108,6 @@ export default StyleSheet.create({
     marginLeft: -3 * width,
     marginTop: -1 * height,
   },
-
   countDownInner: {
     width: 50 * width,
     height: 50 * width,
