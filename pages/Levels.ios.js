@@ -17,7 +17,10 @@ import {
 import {connect} from 'react-redux';
 import Modal from 'react-native-modal';
 import {changeSelectedThemeAction} from '../redux/actions/themeAction';
-
+import {
+  switchMusicAction,
+  switchSoundEffectsAction,
+} from '../redux/actions/preferencesAction';
 import {
   changeLevelAction,
   increaseLevelAction,
@@ -34,12 +37,10 @@ class Levels extends React.Component {
   constructor(props) {
     super(props);
 
-    const {theme} = props;
+    const {theme, preferences} = props;
     const {selectedTheme: selectedThemeProps} = theme;
     this.state = {
       showOptionModal: false,
-      soundOn: true,
-      soundEffectsOn: true,
       selectedTheme: selectedThemeProps,
       themes: ['blue', 'yellow', 'black', 'red', 'creme'].filter(
         el => el !== selectedThemeProps,
@@ -64,13 +65,15 @@ class Levels extends React.Component {
         console.log('failed to load the sound', error);
         return;
       }
-      this.music.play(success => {
-        if (success) {
-          console.log('successfully finished playing');
-        } else {
-          console.log('playback failed due to audio decoding errors');
-        }
-      });
+      if (preferences.music) {
+        this.music.play(success => {
+          if (success) {
+            console.log('successfully finished playing');
+          } else {
+            console.log('playback failed due to audio decoding errors');
+          }
+        });
+      }
 
       this.music.setVolume(0.25);
       this.music.setNumberOfLoops(-1);
@@ -80,7 +83,17 @@ class Levels extends React.Component {
   componentDidMount() {
     AppState.addEventListener('change', this._handleAppStateChange);
   }
-
+  componentDidUpdate(prevProps) {
+    const {preferences} = this.props;
+    const {music} = preferences;
+    if (prevProps.preferences.music !== music) {
+      if (music) {
+        this.music.play();
+      } else {
+        this.music.stop();
+      }
+    }
+  }
   _handleAppStateChange = currentAppState => {
     if (currentAppState === 'background') {
       this.music.stop();
@@ -126,8 +139,10 @@ class Levels extends React.Component {
       return (
         <TouchableOpacity
           onPress={() => {
-            changeLevel(id - 1);
-            navigation.navigate('Game');
+            if (!locked) {
+              changeLevel(id - 1);
+              navigation.navigate('Game');
+            }
           }}>
           <View style={{...styles.levelCardView, borderColor}}>
             {locked ? (
@@ -151,33 +166,29 @@ class Levels extends React.Component {
     const {themes, selectedTheme} = this.state;
     let newThemes = [...themes];
     this.setState({selectedTheme: newThemes[i]});
-    changeSelectedTheme(selectedTheme);
+    changeSelectedTheme(newThemes[i]);
     newThemes[i] = selectedTheme;
     this.setState({themes: newThemes});
   };
 
   render() {
-    const {userLevels, theme: themeProps} = this.props;
     const {
-      showOptionModal,
-      soundOn,
-      soundEffectsOn,
-      selectedTheme,
-      themes,
-    } = this.state;
-
-    const {styles: stylesProps} = themeProps;
-    const styleProps = stylesProps[selectedTheme];
+      userLevels,
+      theme: themeProps,
+      switchMusic,
+      switchSoundEffects,
+      preferences,
+    } = this.props;
+    const {showOptionModal, selectedTheme, themes} = this.state;
+    const {music, soundEffects} = preferences;
+    const {selectedStyles} = themeProps;
     const {
       mainColor,
-      secondaryColor,
-      thirdColor,
-      holdOnAnswer,
       levelsHeader,
       optionModalBG,
       optionModalSoundLeft,
       optionModalSoundRight,
-    } = styleProps;
+    } = selectedStyles;
     return (
       <SafeAreaView style={styles.container}>
         <Modal
@@ -204,22 +215,20 @@ class Levels extends React.Component {
                   trackColor={{false: '#FFF', true: '#10D454'}}
                   thumbColor={'#40514E'}
                   ios_backgroundColor="#3e3e3e"
-                  onValueChange={value => {
-                    this.setState({soundOn: value});
-                    !value ? this.music.stop() : this.music.play();
+                  onValueChange={() => {
+                    switchMusic();
                   }}
-                  value={soundOn}
+                  value={music}
                 />
                 <Switch
                   style={{width: 41 * width, height: 20 * height}}
                   trackColor={{false: '#FFF', true: '#10D454'}}
                   thumbColor={'#40514E'}
                   ios_backgroundColor="#3e3e3e"
-                  onValueChange={value => {
-                    this.setState({soundEffectsOn: value});
-                    !value ? this.music.stop() : this.music.play();
+                  onValueChange={() => {
+                    switchSoundEffects();
                   }}
-                  value={soundEffectsOn}
+                  value={soundEffects}
                 />
               </View>
             </View>
@@ -332,8 +341,8 @@ class Levels extends React.Component {
 }
 
 const mapStateToProps = state => {
-  const {level, userLevels, theme} = state;
-  return {level, userLevels, theme};
+  const {level, userLevels, theme, preferences} = state;
+  return {level, userLevels, theme, preferences};
 };
 const mapDispatchToProps = dispatch => {
   return {
@@ -342,6 +351,8 @@ const mapDispatchToProps = dispatch => {
     changeQuestion: question => dispatch(changeQuestionAction(question)),
     increaseQuestion: () => dispatch(increaseQuestionAction()),
     changeSelectedTheme: theme => dispatch(changeSelectedThemeAction(theme)),
+    switchMusic: () => dispatch(switchMusicAction()),
+    switchSoundEffects: () => dispatch(switchSoundEffectsAction()),
   };
 };
 

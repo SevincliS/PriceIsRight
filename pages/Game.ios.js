@@ -53,7 +53,7 @@ class Game extends React.Component {
     this.state = {
       timer: this.UrgeWithPleasureComponent(true),
       playing: true,
-      life: 1,
+      life: 5,
       score: 120,
       givenAnswer: '',
       removedOptions: [],
@@ -67,7 +67,6 @@ class Game extends React.Component {
       showAdModal: false,
       secondAnswerGiven: false,
     };
-
     rewarded.load();
 
     this.eventListener = rewarded.onAdEvent((type, error, reward) => {
@@ -116,7 +115,7 @@ class Game extends React.Component {
           const {theme} = this.props;
           const {selectedStyles, selectedTheme} = theme;
           const {mainColor, secondaryColor} = selectedStyles;
-          if (remainingTime === 5) {
+          if (remainingTime === 5 && this.props.soundEffects) {
             this.clockSound.play();
           }
           return (
@@ -139,9 +138,12 @@ class Game extends React.Component {
     );
 
   countDownFinished = () => {
+    const {soundEffects} = this.props;
     this.setState({playing: false});
     this.answerCallback(false);
-    this.wrongSound.play();
+    if (soundEffects) {
+      this.wrongSound.play();
+    }
   };
 
   componentWillUnmount() {
@@ -248,14 +250,15 @@ class Game extends React.Component {
   };
 
   goToNextQuestion = () => {
-    const {increaseQuestion, level} = this.props;
+    const {increaseQuestion, level, soundEffects} = this.props;
     if (level.currentQuestion === level.questionCount - 1) {
       this.setState({showScoreModal: true});
-      this.levelFinishSound.play();
+      if (soundEffects) {
+        this.levelFinishSound.play();
+      }
     }
     this.resetTimer(this.resetOptionViews, increaseQuestion);
   };
-
   resetTimer = (...functions) => {
     this.setState({timer: null}, () => {
       functions.forEach(f => f());
@@ -308,7 +311,7 @@ class Game extends React.Component {
       holdOnAnswer,
       removedOptions,
     } = this.state;
-    const {level, theme} = this.props;
+    const {level, theme, soundEffects} = this.props;
     const {selectedStyles} = theme;
     const {holdOnAnswerBG, thirdColor} = selectedStyles;
     const {currentLevel: cl, currentQuestion: cq} = level;
@@ -320,10 +323,14 @@ class Game extends React.Component {
     } else if (removedOptions.includes(option)) {
       return {opacity: 0.25};
     } else if (option === question.rightAnswer && option === givenAnswer) {
-      this.correctSound.play();
+      if (soundEffects) {
+        this.correctSound.play();
+      }
       return {backgroundColor: '#10D454'};
     } else if (option !== question.rightAnswer && option === givenAnswer) {
-      this.wrongSound.play();
+      if (soundEffects) {
+        this.wrongSound.play();
+      }
       return {backgroundColor: '#D40D20'};
     } else {
       return {backgroundColor: thirdColor};
@@ -536,8 +543,8 @@ class Game extends React.Component {
 }
 
 const mapStateToProps = state => {
-  const {level, theme} = state;
-  return {level, theme};
+  const {level, theme, preferences} = state;
+  return {level, theme, soundEffects: preferences.soundEffects};
 };
 const mapDispatchToProps = dispatch => {
   return {
