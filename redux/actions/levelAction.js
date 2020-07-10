@@ -23,7 +23,8 @@ const decreaseLifeAction = () => ({
 const increaseLifeAction = () => ({
   type: 'INCREASE_LIFE',
 });
-const increaseUserScore = score => ({
+
+const increaseUserScoreAction = score => ({
   type: 'INCREASE_USER_SCORE',
   score,
 });
@@ -35,5 +36,5 @@ export {
   increaseQuestionAction,
   decreaseLifeAction,
   increaseLifeAction,
-  increaseUserScore,
+  increaseUserScoreAction,
 };

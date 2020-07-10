@@ -36,8 +36,10 @@ Sound.setCategory('Playback');
 class Levels extends React.Component {
   constructor(props) {
     super(props);
-
+    console.log(new Date().toString());
+    console.log(new Date().getMinutes());
     const {theme, preferences} = props;
+    console.log(preferences);
     const {selectedTheme: selectedThemeProps} = theme;
     this.state = {
       showOptionModal: false,
@@ -97,10 +99,12 @@ class Levels extends React.Component {
     }
   }
   _handleAppStateChange = currentAppState => {
+    const {preferences} = this.props;
+    const {music} = preferences;
     if (currentAppState === 'background') {
       this.music.stop();
     }
-    if (currentAppState === 'active') {
+    if (currentAppState === 'active' && music) {
       this.music.play();
     }
   };
@@ -171,6 +175,20 @@ class Levels extends React.Component {
     changeSelectedTheme(newThemes[i]);
     newThemes[i] = selectedTheme;
     this.setState({themes: newThemes});
+  };
+
+  getGlobalTime = () => {
+    return new Promise((res, rej) => {
+      fetch('http://worldclockapi.com/api/json/utc/now')
+        .then(response => response.json())
+        .then(data => {
+          const {currentDateTime} = data;
+          res(new Date(currentDateTime).getTime());
+        })
+        .catch(err => {
+          rej(err);
+        });
+    });
   };
 
   render() {
