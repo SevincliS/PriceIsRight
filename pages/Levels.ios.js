@@ -190,6 +190,7 @@ class Levels extends React.Component {
       optionModalSoundRight,
     } = selectedStyles;
     return (
+<View style={{backgroundColor:'#fff',flex:1}}>
       <SafeAreaView style={styles.container}>
         <Modal
           onBackdropPress={() => this.setState({showOptionModal: false})}
@@ -336,6 +337,7 @@ class Levels extends React.Component {
           })}
         </ScrollView>
       </SafeAreaView>
+</View>
     );
   }
 }

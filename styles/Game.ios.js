@@ -9,9 +9,8 @@ export default StyleSheet.create({
     flex: 1,
   },
   image: {
-    width: 100 * width,
-    height: 190 * height,
-    resizeMode: 'contain',
+    width: 260 * width,
+    height: 260 * height,
   },
   backButton: {
     width: 53 * width,
@@ -47,7 +46,6 @@ export default StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
     marginTop: 7,
   },
   infoView: {

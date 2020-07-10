@@ -4,18 +4,16 @@ const width = parseInt(Dimensions.get('screen').width, 10) / 360;
 const height = parseInt(Dimensions.get('screen').height, 10) / 640;
 
 export default StyleSheet.create({
+  container: {
+    justifyContent: 'center',
+    backgroundColor: '#E4F9F5',
+    flex: 1,
+  },
   lifeCountImage: {
     width: 121 * width,
     height: 37 * height,
     marginLeft: -65 * width,
     marginTop: 15 * height,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 10,
-    },
-    shadowOpacity: 0.53,
-    shadowRadius: 13.97,
   },
   lifeCountText: {
     marginLeft: 70 * width,
@@ -82,7 +80,6 @@ export default StyleSheet.create({
   },
   levelsContainer: {
     backgroundColor: '#E4F9F5',
-    marginBottom: 36 * height,
   },
   levelRow: {
     justifyContent: 'space-around',
@@ -135,7 +132,7 @@ export default StyleSheet.create({
     marginLeft: -3 * width,
     position: 'absolute',
   },
-  linearGradient: {
+  modalContainer: {
     width: 325 * width,
     height: 403 * height,
     borderRadius: 18,
