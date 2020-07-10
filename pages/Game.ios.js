@@ -67,13 +67,31 @@ class Game extends React.Component {
       scoreModalRightText: 'Tekrar',
       showAdModal: false,
       secondAnswerGiven: false,
+      rewardType: 'none',
+      currentQuestion: 'none',
     };
     rewarded.load();
 
     this.eventListener = rewarded.onAdEvent((type, error, reward) => {
       if (type === 'closed' && this.state.earned) {
-        const {increaseLife} = this.props;
-        increaseLife();
+        const {increaseLife, increaseQuestion} = this.props;
+        const {rewardType, doubleUsed, currentQuestion, skipUsed} = this.state;
+
+        if (reward === 'life') {
+          increaseLife();
+        } else if (rewardType === 'fifty') {
+          this.useFifty(currentQuestion);
+        } else if (rewardType === 'double') {
+          doubleUsed
+            ? null
+            : this.setState({
+                doubleUsed: true,
+                double: true,
+              });
+        } else if (rewardType === 'skip') {
+          skipUsed ? null : increaseQuestion();
+          this.setState({skipUsed: true});
+        }
         this.setState({
           showScoreModal: false,
         });
@@ -84,12 +102,14 @@ class Game extends React.Component {
         this.setState({
           modalText: 'Yeterince izlemediğin için ödülü alamadınn!',
         });
+        this.resetTimer();
       }
       if (type === RewardedAdEventType.LOADED) {
         this.setState({showRewarded: true});
       }
       if (type === RewardedAdEventType.EARNED_REWARD) {
         this.setState({earned: true, showRewarded: false});
+        this.resetTimer();
       }
     });
 
@@ -271,7 +291,7 @@ class Game extends React.Component {
     this.setState({givenAnswer: '', doubleOption: '', removedOptions: []});
   };
 
-  onPressFifty = question => {
+  useFifty = question => {
     const {fiftyUsed} = this.state;
     let randVal = Math.floor(Math.random() * 3);
     fiftyUsed
@@ -351,7 +371,7 @@ class Game extends React.Component {
       starCount,
       scoreModalRightText,
     } = this.state;
-    const {level, navigation, increaseQuestion, theme} = this.props;
+    const {level, navigation, theme} = this.props;
     const {currentLevel: cl, currentQuestion: cq} = level;
     const question = levels[cl][cq];
     const {selectedStyles} = theme;
@@ -446,7 +466,10 @@ class Game extends React.Component {
               </View>
             </TouchableHighlight>
             <TouchableHighlight
-              onPress={() => rewarded.show()}
+              onPress={() => {
+                this.setState({rewardType: 'life'});
+                rewarded.show();
+              }}
               style={styles.goToAdHighlight}>
               <View style={styles.goToAdButton}>
                 <Image
@@ -508,7 +531,11 @@ class Game extends React.Component {
         <View style={{...styles.jokerView, backgroundColor: secondaryColor}}>
           <TouchableOpacity
             onPress={() => {
-              this.onPressFifty(question);
+              this.setState({
+                rewardType: 'fifty',
+                currentQuestion: question,
+              });
+              rewarded.show();
             }}>
             <View style={{...styles.joker, opacity: fiftyUsed ? 0.25 : 1}}>
               <Text style={styles.jokerText}>50/50</Text>
@@ -529,12 +556,8 @@ class Game extends React.Component {
           </View>
           <TouchableOpacity
             onPress={() => {
-              doubleUsed
-                ? null
-                : this.setState({
-                    doubleUsed: true,
-                    double: true,
-                  });
+              this.setState({rewardType: 'double'});
+              rewarded.show();
             }}>
             <View style={{...styles.joker, opacity: doubleUsed ? 0.25 : 1}}>
               <Text style={styles.jokerText}>2X</Text>
@@ -554,8 +577,8 @@ class Game extends React.Component {
           </View>
           <TouchableOpacity
             onPress={() => {
-              skipUsed ? null : increaseQuestion();
-              this.setState({skipUsed: true});
+              this.setState({rewardType: 'skip'});
+              rewarded.show();
             }}>
             <View style={{...styles.joker, opacity: skipUsed ? 0.25 : 1}}>
               <Text style={styles.jokerText}>SKIP</Text>
