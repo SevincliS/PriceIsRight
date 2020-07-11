@@ -47,18 +47,42 @@ class Levels extends React.Component {
         el => el !== selectedThemeProps,
       ),
     };
+    this.scaleValue = new Animated.Value(0);
+    Animated.loop(
+      Animated.timing(this.scaleValue, {
+        toValue: 4,
+        duration: 1500,
+        easing: Easing.linear,
+        useNativeDriver: true, // To make use of native driver for performance
+      }),
+    ).start();
+    this.scale = this.scaleValue.interpolate({
+      inputRange: [0, 1, 1.5, 2, 3, 4],
+      outputRange: [1, 1.25, 1.125, 1.25, 1, 1],
+    });
+
     this.spinValue = new Animated.Value(0);
     Animated.loop(
       Animated.timing(this.spinValue, {
         toValue: 5,
-        duration: 9000,
+        duration: 8000,
         easing: Easing.linear,
         useNativeDriver: true, // To make use of native driver for performance
       }),
     ).start();
     this.spin = this.spinValue.interpolate({
-      inputRange: [0, 1, 2, 3, 4, 5],
-      outputRange: ['0deg', '360deg', '360deg', '0deg', '360deg', '360deg'],
+      inputRange: [0, 1, 1.25, 2.25, 2.5, 3.5, 3.75, 4.75, 5],
+      outputRange: [
+        '0deg',
+        '360deg',
+        '360deg',
+        '0deg',
+        '0deg',
+        '360deg',
+        '360deg',
+        '0deg',
+        '0deg',
+      ],
     });
 
     this.music = new Sound('musicc.mp3', Sound.MAIN_BUNDLE, error => {
@@ -345,7 +369,20 @@ class Levels extends React.Component {
           </Modal>
           <View style={{...styles.header, backgroundColor: levelsHeader}}>
             <TouchableOpacity>
-              <View style={{flexDirection: 'row'}}>
+              <View style={{flexDirection: 'row', justifyContent: 'center'}}>
+                <Animated.Image
+                  resizeMode={'contain'}
+                  style={{
+                    zIndex: 1,
+                    marginLeft: 25 * width,
+                    marginRight: -22 * width,
+                    marginTop: 18 * height,
+                    width: 27 * width,
+                    height: 27 * height,
+                    transform: [{rotate: '-33deg', scale: this.scale}],
+                  }}
+                  source={{uri: 'heart'}}
+                />
                 <Text style={styles.lifeCountText}>5</Text>
                 <Image
                   style={styles.lifeCountImage}
