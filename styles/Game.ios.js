@@ -9,8 +9,8 @@ export default StyleSheet.create({
     flex: 1,
   },
   image: {
-    width: 260 * width,
-    height: 260 * height,
+    width: 240 * width,
+    height: 240 * height,
   },
   backButton: {
     width: 53 * width,
