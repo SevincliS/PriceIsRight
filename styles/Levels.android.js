@@ -12,7 +12,6 @@ export default StyleSheet.create({
   lifeCountImage: {
     width: 121 * width,
     height: 37 * height,
-    marginLeft: -65 * width,
     marginTop: 15 * height,
     shadowColor: '#000',
     shadowOffset: {
@@ -23,9 +22,9 @@ export default StyleSheet.create({
     shadowRadius: 13.97,
   },
   lifeCountText: {
-    marginLeft: 70 * width,
-    marginTop: 23 * height,
-    zIndex: 1,
+    position: 'absolute',
+    top: 21 * height,
+    left: 75 * width,
     fontSize: 16,
     fontFamily: 'Molle-Italic',
     shadowColor: '#000',
