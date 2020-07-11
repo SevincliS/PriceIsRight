@@ -22,6 +22,7 @@ const levelReducer = (state = INITIAL_STATE, action) => {
     case 'INCREASE_LIFE':
       return {...state, life: state.life < 5 ? state.life + 1 : state.life};
     case 'DECREASE_LIFE':
+      console.log(action);
       return {
         ...state,
         life: state.life > 0 ? state.life - 1 : state.life,

@@ -53,6 +53,7 @@ class Game extends React.Component {
     super(props);
     const {level} = props;
     //const {life} = level;
+    console.log(level);
     this.state = {
       timer: this.UrgeWithPleasureComponent(true),
       playing: true,

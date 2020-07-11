@@ -161,11 +161,13 @@ class Levels extends React.Component {
     if (!lifeLostTimestamp) {
       return;
     } else {
-      let timestamp = this.getGlobalTime();
+      let timestamp = await this.getGlobalTime();
       let timeDifference = timestamp - lifeLostTimestamp;
-      let hourlyDifference = timeDifference / (1000 * 36000);
+      let hourlyDifference = Math.floor(timeDifference / (1000 * 3600));
       let newLife = life + hourlyDifference;
-      updateLife(newLife);
+      if (hourlyDifference > 0) {
+        updateLife(newLife);
+      }
     }
   };
   levelCard = ({id, locked, successRate, difficulty}) => {
@@ -256,7 +258,9 @@ class Levels extends React.Component {
       switchMusic,
       switchSoundEffects,
       preferences,
+      level,
     } = this.props;
+    const {life} = level;
     const {showOptionModal, selectedTheme, themes} = this.state;
     const {music, soundEffects} = preferences;
     const {selectedStyles} = themeProps;
@@ -445,6 +449,7 @@ const mapDispatchToProps = dispatch => {
     switchMusic: () => dispatch(switchMusicAction()),
     switchSoundEffects: () => dispatch(switchSoundEffectsAction()),
     updateLife: life => dispatch(updateLifeAction(life)),
+    setConsent: consent => dispatch(setConsentAction(consent)),
   };
 };
 
