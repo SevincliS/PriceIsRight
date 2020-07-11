@@ -51,13 +51,9 @@ Sound3.setCategory('Playback');
 class Game extends React.Component {
   constructor(props) {
     super(props);
-    const {level} = props;
-    //const {life} = level;
-    console.log(level);
     this.state = {
       timer: this.UrgeWithPleasureComponent(true),
       playing: true,
-      life: 5,
       score: 0,
       givenAnswer: '',
       removedOptions: [],
@@ -72,20 +68,27 @@ class Game extends React.Component {
       secondAnswerGiven: false,
       rewardType: 'none',
       currentQuestion: 'none',
+      usedJokerCount: 0,
+      usedKeepGoing: false,
     };
     rewarded.load();
     const {status} = this.props;
     rewarded.requestNonPersonalizedAdsOnly = status;
     this.eventListener = rewarded.onAdEvent((type, error, reward) => {
       if (type === 'closed' && this.state.earned) {
-        const {increaseLife, increaseQuestion} = this.props;
+        const {increaseLife} = this.props;
         const {rewardType, doubleUsed, currentQuestion, skipUsed} = this.state;
-
-        if (reward === 'life') {
-          increaseLife();
+        if (rewardType === 'life') {
+          setTimeout(() => {
+            this.setState({usedKeepGoing: true, showAdModal: false});
+            increaseLife();
+          }, 1);
+          this.goToNextQuestion();
         } else if (rewardType === 'fifty') {
+          this.increaseJokerCount();
           this.useFifty(currentQuestion);
         } else if (rewardType === 'double') {
+          this.increaseJokerCount();
           doubleUsed
             ? null
             : this.setState({
@@ -93,7 +96,8 @@ class Game extends React.Component {
                 double: true,
               });
         } else if (rewardType === 'skip') {
-          skipUsed ? null : increaseQuestion();
+          this.increaseJokerCount();
+          skipUsed ? null : this.goToNextQuestion();
           this.setState({skipUsed: true});
         }
         this.setState({
@@ -221,23 +225,23 @@ class Game extends React.Component {
   };
 
   answerCallback = async isTrue => {
-    const {decreaseLife} = this.props;
-    const {double, givenAnswer} = this.state;
-
+    const {decreaseLife, navigation} = this.props;
+    const {double, givenAnswer, usedKeepGoing} = this.state;
+    console.log(isTrue);
     if (double) {
       this.useDouble(isTrue, givenAnswer);
       this.setState({secondAnswerGiven: true});
     } else {
       await this.updateScoreAndLife(isTrue);
-      const {life} = this.state;
-      console.log(life);
-      if (!isTrue && life === 0) {
-        this.setState({showAdModal: true});
-      } else if (!isTrue) {
+      if (!isTrue) {
         this.setState({playing: false});
-        let timestamp = await this.getGlobalTime();
-        decreaseLife(timestamp);
-        this.goToNextQuestion();
+        if (usedKeepGoing) {
+          this.setState({showScoreModal: true});
+          let timestamp = await this.getGlobalTime();
+          decreaseLife(timestamp);
+        } else {
+          this.setState({showAdModal: true});
+        }
       } else {
         this.goToNextQuestion();
       }
@@ -245,18 +249,15 @@ class Game extends React.Component {
   };
 
   updateScoreAndLife = async isTrue => {
-    const {level} = this.props;
+    const {level, increaseLife, decreaseLife} = this.props;
     const {currentLevel} = level;
     const additionalScore = Math.floor(currentLevel / 5) + 1;
-    return new Promise((res, rej) => {
+    return new Promise(async (res, rej) => {
+      let timestamp = await this.getGlobalTime();
+      isTrue ? increaseLife() : decreaseLife(timestamp);
       this.setState(
         prevState => ({
           score: isTrue ? prevState.score + additionalScore : prevState.score,
-          life: isTrue
-            ? prevState.life
-            : prevState.life > 0
-            ? prevState.life - 1
-            : prevState.life,
         }),
         () => {
           res();
@@ -278,8 +279,15 @@ class Game extends React.Component {
     }
   };
 
+  increaseJokerCount = () => {
+    this.setState(prevState => ({
+      usedJokerCount: prevState.usedJokerCount + 1,
+    }));
+  };
   goToNextQuestion = () => {
-    const {score} = this.state;
+    const {score, usedJokerCount} = this.state;
+    let successRate = usedJokerCount === 0 ? 3 : 3 - usedJokerCount;
+    this.setState({starCount: successRate});
     const {
       increaseQuestion,
       level,
@@ -290,7 +298,7 @@ class Game extends React.Component {
     const {currentLevel, currentQuestion, questionCount} = level;
     if (currentQuestion === questionCount - 1) {
       this.setState({showScoreModal: true});
-      changeUserLevel(currentLevel, {successRate: 1});
+      changeUserLevel(currentLevel, {successRate});
       increaseTotalUserScore(score);
       if (soundEffects) {
         this.levelFinishSound.play();
@@ -367,7 +375,7 @@ class Game extends React.Component {
       }
       return {backgroundColor: '#10D454'};
     } else if (option !== question.rightAnswer && option === givenAnswer) {
-      if (soundEffects) {
+      if (soundEffects && !this.state.showAdModal) {
         this.wrongSound.play();
       }
       return {backgroundColor: '#D40D20'};
@@ -375,7 +383,6 @@ class Game extends React.Component {
       return {backgroundColor: thirdColor};
     }
   };
-
   getGlobalTime = () => {
     return new Promise((res, rej) => {
       fetch('http://worldclockapi.com/api/json/utc/now')
@@ -394,7 +401,6 @@ class Game extends React.Component {
     const {
       timer,
       score,
-      life,
       fiftyUsed,
       doubleUsed,
       skipUsed,
@@ -404,7 +410,7 @@ class Game extends React.Component {
       scoreModalRightText,
     } = this.state;
     const {level, navigation, theme} = this.props;
-    const {currentLevel: cl, currentQuestion: cq} = level;
+    const {currentLevel: cl, currentQuestion: cq, life} = level;
     const question = levels[cl][cq];
     const {selectedStyles} = theme;
     const {mainColor, secondaryColor, thirdColor} = selectedStyles;

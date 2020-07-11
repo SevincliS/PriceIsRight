@@ -383,7 +383,7 @@ class Levels extends React.Component {
                 }}
                 source={{uri: 'heart'}}
               />
-              <Text style={styles.lifeCountText}>5</Text>
+              <Text style={styles.lifeCountText}>{life}</Text>
               <Image
                 style={styles.lifeCountImage}
                 source={{uri: 'life_count'}}
