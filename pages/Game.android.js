@@ -333,13 +333,12 @@ class Game extends React.Component {
         });
   };
 
-  optionComponent = option => {
-    const {givenAnswer} = this.state;
+  optionComponent = (option, stateAnswer) => {
     const {level} = this.props;
     const {currentLevel: cl, currentQuestion: cq} = level;
     const question = levels[cl][cq];
     return (
-      <TouchableOpacity onPress={() => this.answer(option, givenAnswer)}>
+      <TouchableOpacity onPress={() => this.answer(option, stateAnswer)}>
         <View
           style={{
             ...styles.a,
@@ -408,6 +407,7 @@ class Game extends React.Component {
       showAdModal,
       starCount,
       scoreModalRightText,
+      givenAnswer
     } = this.state;
     const {level, navigation, theme} = this.props;
     const {currentLevel: cl, currentQuestion: cq, life} = level;
@@ -559,12 +559,12 @@ class Game extends React.Component {
           <Text style={styles.questionText}>{question.text}</Text>
         </View>
         <View style={styles.firstAnswerRow}>
-          {this.optionComponent('a')}
-          {this.optionComponent('b')}
+          {this.optionComponent('a', givenAnswer)}
+          {this.optionComponent('b', givenAnswer)}
         </View>
         <View style={styles.secondAnswerRow}>
-          {this.optionComponent('c')}
-          {this.optionComponent('d')}
+          {this.optionComponent('c', givenAnswer)}
+          {this.optionComponent('d', givenAnswer)}
         </View>
         <View style={{...styles.jokerView, backgroundColor: secondaryColor}}>
           <TouchableOpacity
