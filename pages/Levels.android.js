@@ -106,6 +106,13 @@ class Levels extends React.Component {
   }
 
   componentDidMount = async () => {
+    const {navigation} = this.props;
+    navigation.addListener('focus', () => {
+      this.checkLifes();
+    });
+    navigation.addListener('blur', () => {
+      clearInterval(this.interval);
+    });
     const consentInfo = await AdsConsent.requestInfoUpdate([
       'pub-4313673729121143',
     ]);
@@ -130,7 +137,6 @@ class Levels extends React.Component {
       }
     }
     AppState.addEventListener('change', this._handleAppStateChange);
-    this.checkLifes();
   };
   componentDidUpdate(prevProps) {
     const {preferences} = this.props;
@@ -143,15 +149,18 @@ class Levels extends React.Component {
       }
     }
   }
+
   _handleAppStateChange = currentAppState => {
     const {preferences} = this.props;
     const {music} = preferences;
-    this.checkLifes();
     if (currentAppState === 'background') {
       this.music.stop();
-    }
-    if (currentAppState === 'active' && music) {
+      clearInterval(this.interval);
+    } else if (currentAppState === 'active' && music) {
       this.music.play();
+    }
+    if (currentAppState === 'active') {
+      this.checkLifes();
     }
   };
 
@@ -161,17 +170,30 @@ class Levels extends React.Component {
     if (!lifeLostTimestamp) {
       return;
     } else {
+      console.log(new Date(lifeLostTimestamp));
       let timestamp = await this.getGlobalTime();
+      console.log(new Date(timestamp));
       let timeDifference = timestamp - lifeLostTimestamp;
-      let hourlyDifference = Math.floor(timeDifference / (1000 * 3600));
-      let newLife = life + hourlyDifference;
-      if (hourlyDifference > 0) {
+      let hourDifference = Math.floor(timeDifference / (1000 * 3600));
+      let newLife = life + hourDifference;
+      if (hourDifference > 0) {
         updateLife(newLife);
+      } else {
+        let secondDifference = 3600 - Math.floor(timeDifference / 1000);
+        console.log(secondDifference);
+        this.interval = setInterval(() => {
+          this.setState(prevState => ({
+            secondDifference: prevState.secondDifference
+              ? prevState.secondDifference - 1
+              : secondDifference,
+          }));
+        }, 1000);
       }
     }
   };
   levelCard = ({id, locked, successRate, difficulty}) => {
-    const {navigation, changeLevel} = this.props;
+    const {navigation, changeLevel, level} = this.props;
+    let {life} = level;
     let uri;
     let borderColor;
 
@@ -206,7 +228,7 @@ class Levels extends React.Component {
       return (
         <TouchableOpacity
           onPress={() => {
-            if (!locked) {
+            if (!locked && life > 0) {
               changeLevel(id - 1);
               navigation.navigate('Game');
             }
@@ -251,6 +273,29 @@ class Levels extends React.Component {
         });
     });
   };
+
+  countDownText = secondDifference => {
+    if (!secondDifference) {
+      return '??:??';
+    }
+    console.log(secondDifference);
+    const {updateLife} = this.props;
+    let minuteDifference = Math.floor(secondDifference / 60);
+    let currentSecondDifference = secondDifference % 60;
+    if (currentSecondDifference === 0 && minuteDifference === 0) {
+      updateLife(1);
+      clearInterval(this.interval);
+    }
+    currentSecondDifference =
+      currentSecondDifference < 10
+        ? `0${currentSecondDifference.toString()}`
+        : currentSecondDifference.toString();
+    minuteDifference =
+      minuteDifference < 10
+        ? `0${minuteDifference.toString()}`
+        : minuteDifference.toString();
+    return `${minuteDifference}:${currentSecondDifference}`;
+  };
   render() {
     const {
       userLevels,
@@ -261,7 +306,12 @@ class Levels extends React.Component {
       level,
     } = this.props;
     const {life} = level;
-    const {showOptionModal, selectedTheme, themes} = this.state;
+    const {
+      showOptionModal,
+      selectedTheme,
+      themes,
+      secondDifference,
+    } = this.state;
     const {music, soundEffects} = preferences;
     const {selectedStyles} = themeProps;
     const {
@@ -383,7 +433,13 @@ class Levels extends React.Component {
                 }}
                 source={{uri: 'heart'}}
               />
-              <Text style={styles.lifeCountText}>{life}</Text>
+              {life > 0 ? (
+                <Text style={styles.lifeCountText}>{life}</Text>
+              ) : (
+                <Text style={styles.countDownText}>
+                  {this.countDownText(secondDifference)}
+                </Text>
+              )}
               <Image
                 style={styles.lifeCountImage}
                 source={{uri: 'life_count'}}

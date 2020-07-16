@@ -51,9 +51,12 @@ Sound3.setCategory('Playback');
 class Game extends React.Component {
   constructor(props) {
     super(props);
+    const {level} = props;
+    const {life} = level;
     this.state = {
       timer: this.UrgeWithPleasureComponent(true),
       playing: true,
+      life,
       score: 0,
       givenAnswer: '',
       removedOptions: [],
@@ -407,9 +410,9 @@ class Game extends React.Component {
       showAdModal,
       starCount,
       scoreModalRightText,
-      givenAnswer
+      givenAnswer,
     } = this.state;
-    const {level, navigation, theme} = this.props;
+    const {level, navigation, theme, decreaseLife} = this.props;
     const {currentLevel: cl, currentQuestion: cq, life} = level;
     const question = levels[cl][cq];
     const {selectedStyles} = theme;
@@ -491,7 +494,11 @@ class Game extends React.Component {
             </TouchableOpacity>
             <TouchableHighlight
               style={styles.goToHomeHighlight}
-              onPress={() => navigation.goBack()}>
+              onPress={async () => {
+                let timestamp = await this.getGlobalTime();
+                decreaseLife(timestamp);
+                navigation.goBack();
+              }}>
               <View style={styles.goToHomeButton}>
                 <Image
                   resizeMode="contain"

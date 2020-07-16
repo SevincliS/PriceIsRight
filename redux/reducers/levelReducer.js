@@ -26,9 +26,9 @@ const levelReducer = (state = INITIAL_STATE, action) => {
       return {
         ...state,
         life: state.life > 0 ? state.life - 1 : state.life,
-        lifeLostTimestamp: state.lifeLostTimestamp
-          ? state.lifeLostTimestamp
-          : action.timestamp,
+        lifeLostTimestamp: action.timestamp
+          ? action.timestamp
+          : state.lifeLostTimestamp,
       };
     case 'INCREASE_USER_SCORE':
       return {...state, score: state.score + action.score};

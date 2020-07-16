@@ -30,6 +30,21 @@ export default StyleSheet.create({
     shadowRadius: 13.97,
     elevation: 21,
   },
+  countDownText: {
+    position: 'absolute',
+    top: 21 * height,
+    left: 60 * width,
+    fontSize: 16,
+    fontFamily: 'Molle-Italic',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 10,
+    },
+    shadowOpacity: 0.53,
+    shadowRadius: 13.97,
+    elevation: 21,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
