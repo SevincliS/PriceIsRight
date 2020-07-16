@@ -73,6 +73,7 @@ class Game extends React.Component {
       currentQuestion: 'none',
       usedJokerCount: 0,
       usedKeepGoing: false,
+      showGoBackModal: false,
     };
     rewarded.load();
     const {status} = this.props;
@@ -411,6 +412,7 @@ class Game extends React.Component {
       starCount,
       scoreModalRightText,
       givenAnswer,
+      showGoBackModal,
     } = this.state;
     const {level, navigation, theme, decreaseLife} = this.props;
     const {currentLevel: cl, currentQuestion: cq, life} = level;
@@ -485,7 +487,9 @@ class Game extends React.Component {
             />
             <TouchableOpacity
               style={styles.closeButtonView}
-              onPress={() => navigation.goBack()}>
+              onPress={async () => {
+                navigation.goBack();
+              }}>
               <Image
                 resizeMode={'contain'}
                 source={{uri: 'close'}}
@@ -495,8 +499,6 @@ class Game extends React.Component {
             <TouchableHighlight
               style={styles.goToHomeHighlight}
               onPress={async () => {
-                let timestamp = await this.getGlobalTime();
-                decreaseLife(timestamp);
                 navigation.goBack();
               }}>
               <View style={styles.goToHomeButton}>
@@ -531,10 +533,41 @@ class Game extends React.Component {
             </TouchableHighlight>
           </View>
         </Modal>
+        <Modal style={styles.goBackModal} isVisible={showGoBackModal}>
+          <View style={styles.goBackModalView}>
+            <View style={styles.goBackModalQuestionsView}>
+              <Text style={styles.goBackModalQuestion}>
+                Çıkmak istediğinize emin misiniz?
+              </Text>
+              <Text style={styles.goBackModalInfo}>
+                Eğer çıkarsanız can kaybedeceksiniz !
+              </Text>
+            </View>
+            <View style={styles.goBackModalButtons}>
+              <TouchableOpacity
+                onPress={() => {
+                  this.setState({showGoBackModal: false});
+                }}>
+                <View style={styles.goBackModalYes}>
+                  <Text style={styles.goBackModalYesText}>Devam et</Text>
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  decreaseLife();
+                  navigation.goBack();
+                }}>
+                <View style={styles.goBackModalNo}>
+                  <Text style={styles.goBackModalNoText}>Çıkış yap</Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
         <View style={styles.header}>
           <TouchableOpacity
             onPress={() => {
-              navigation.goBack();
+              this.setState({showGoBackModal: true});
             }}>
             <View
               style={{...styles.backButton, backgroundColor: secondaryColor}}>
