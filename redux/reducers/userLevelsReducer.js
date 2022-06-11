@@ -20,9 +20,9 @@ const userLevelsReducer = (state = INITIAL_STATE, action) => {
   switch (action.type) {
     case 'CHANGE_USER_LEVEL':
       return state.map((level, i) => {
-        if (i === action.levelId - 1) {
+        if (i === action.levelId) {
           return {...level, locked: false, ...action.newFields};
-        } else if (i === action.levelId) {
+        } else if (i === action.levelId + 1) {
           return {...level, locked: false};
         } else {
           return level;

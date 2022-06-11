@@ -66,7 +66,7 @@ class Game extends React.Component {
       skipUsed: false,
       starCount: 0,
       showScoreModal: false,
-      scoreModalRightText: 'Tekrar',
+      scoreModalRightText: 'Devam',
       showAdModal: false,
       secondAnswerGiven: false,
       rewardType: 'none',
@@ -250,12 +250,12 @@ class Game extends React.Component {
   };
 
   updateScoreAndLife = async isTrue => {
-    const {level, increaseLife, decreaseLife} = this.props;
+    const {level, decreaseLife} = this.props;
     const {currentLevel} = level;
     const additionalScore = Math.floor(currentLevel / 5) + 1;
     return new Promise(async (res, rej) => {
       let timestamp = await this.getGlobalTime();
-      isTrue ? increaseLife() : decreaseLife(timestamp);
+      !isTrue ? decreaseLife(timestamp) : null;
       this.setState(
         prevState => ({
           score: isTrue ? prevState.score + additionalScore : prevState.score,
@@ -298,14 +298,19 @@ class Game extends React.Component {
     } = this.props;
     const {currentLevel, currentQuestion, questionCount} = level;
     if (currentQuestion === questionCount - 1) {
-      this.setState({showScoreModal: true});
+      this.setState({
+        showScoreModal: true,
+        timer: this.UrgeWithPleasureComponent(false),
+      });
       changeUserLevel(currentLevel, {successRate});
       increaseTotalUserScore(score);
+
       if (soundEffects) {
         this.levelFinishSound.play();
       }
+    } else {
+      this.resetTimer(this.resetOptionViews, increaseQuestion);
     }
-    this.resetTimer(this.resetOptionViews, increaseQuestion);
   };
   resetTimer = (...functions) => {
     this.setState({timer: null}, () => {
@@ -411,7 +416,14 @@ class Game extends React.Component {
       givenAnswer,
       showGoBackModal,
     } = this.state;
-    const {level, navigation, theme, decreaseLife} = this.props;
+    const {
+      level,
+      navigation,
+      theme,
+      decreaseLife,
+      increaseLevel,
+      changeQuestion,
+    } = this.props;
     const {currentLevel: cl, currentQuestion: cq, life} = level;
     const question = levels[cl][cq];
     const {selectedStyles} = theme;
@@ -420,7 +432,8 @@ class Game extends React.Component {
     return (
       <View style={{...styles.container, backgroundColor: mainColor}}>
         <Modal style={styles.scoreModal} isVisible={showScoreModal}>
-          <View style={{...styles.scoreModalView, backgroundColor: mainColor}}>
+          <View
+            style={{...styles.scoreModalView, backgroundColor: secondaryColor}}>
             <View style={styles.scoreModalSuccessView}>
               <Image
                 resizeMode={'contain'}
@@ -460,7 +473,13 @@ class Game extends React.Component {
                   <Text style={styles.scoreModalHomepageText}>Anasayfa</Text>
                 </View>
               </TouchableOpacity>
-              <TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  this.setState({showScoreModal: false});
+                  increaseLevel();
+                  changeQuestion(0);
+                  this.resetOptionViews();
+                }}>
                 <View style={styles.scoreModalHomepage}>
                   <Text style={styles.scoreModalRightText}>
                     {scoreModalRightText}

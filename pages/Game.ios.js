@@ -242,7 +242,7 @@ class Game extends React.Component {
         if (usedKeepGoing) {
           this.setState({showScoreModal: true});
           let timestamp = await this.getGlobalTime();
-          decreaseLife(timestamp);
+          //decreaseLife(timestamp);
         } else {
           this.setState({showAdModal: true});
         }
@@ -253,12 +253,12 @@ class Game extends React.Component {
   };
 
   updateScoreAndLife = async isTrue => {
-    const {level, increaseLife, decreaseLife} = this.props;
+    const {level, decreaseLife} = this.props;
     const {currentLevel} = level;
     const additionalScore = Math.floor(currentLevel / 5) + 1;
     return new Promise(async (res, rej) => {
       let timestamp = await this.getGlobalTime();
-      isTrue ? increaseLife() : decreaseLife(timestamp);
+      !isTrue ? decreaseLife(timestamp) : null;
       this.setState(
         prevState => ({
           score: isTrue ? prevState.score + additionalScore : prevState.score,
